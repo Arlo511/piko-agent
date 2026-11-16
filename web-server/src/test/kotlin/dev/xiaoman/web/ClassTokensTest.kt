@@ -2,6 +2,7 @@ package dev.xiaoman.web
 
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneId
@@ -43,7 +44,9 @@ class ClassTokensTest {
         assertNull(store.find("xm-" + "a".repeat(20)))
         // Numbering continues after existing labels; the file mode is 0640.
         assertEquals(listOf("学员 04", "学员 05"), generated(admin(file, "generate", "2")).map { it.first })
-        assertEquals("rw-r-----", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(file)))
+        if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            assertEquals("rw-r-----", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(file)))
+        }
         assertTrue("学员 05" in admin(file, "list").out)
     }
 

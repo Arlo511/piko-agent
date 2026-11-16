@@ -490,13 +490,16 @@ class WebServerTest {
         assertFailsWith<dev.xiaoman.mcp.McpException> { StdioMcp(false).transport(server) }
         val dir = Files.createTempDirectory("xiaoman-path")
         try {
-            listOf("node", "npx").forEach { Files.createFile(dir.resolve(it)).toFile().setExecutable(true) }
-            assertTrue(StdioMcp.commandsOnPath(dir.toString()))
-            assertFalse(StdioMcp.commandsOnPath(dir.toString(), listOf("node", "missing")))
+            val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+            if (!isWindows) {
+                listOf("node", "npx").forEach { Files.createFile(dir.resolve(it)).toFile().setExecutable(true) }
+                assertTrue(StdioMcp.commandsOnPath(dir.toString(), windows = false))
+                assertFalse(StdioMcp.commandsOnPath(dir.toString(), listOf("node", "missing"), windows = false))
+            }
             assertFalse(StdioMcp.commandsOnPath(""))
             assertFalse(StdioMcp.commandsOnPath(dir.toString(), windows = true, pathExt = ".EXE;.CMD"))
             listOf("node.exe", "npx.cmd").forEach { Files.createFile(dir.resolve(it)).toFile().setExecutable(true) }
-            Files.delete(dir.resolve("npx"))
+            Files.deleteIfExists(dir.resolve("npx"))
             assertTrue(StdioMcp.commandsOnPath(dir.toString(), windows = true, pathExt = ".EXE;.CMD"))
         } finally { dir.toFile().deleteRecursively() }
     }
