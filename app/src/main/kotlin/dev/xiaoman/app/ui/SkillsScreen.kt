@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +69,9 @@ class SkillsViewModel(
 fun SkillsScreen(graph: AppGraph) {
     val vm = viewModel { SkillsViewModel(graph.skills, { graph.startup.await() }, graph::logSkillProblems) }
     val state by vm.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        graph.skillsChanged.collect { vm.reload() }
+    }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.skills_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))

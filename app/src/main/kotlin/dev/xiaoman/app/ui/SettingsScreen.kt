@@ -22,9 +22,11 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,9 +38,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import dev.xiaoman.agent.Persona
 import dev.xiaoman.app.AppGraph
 import dev.xiaoman.app.R
 import dev.xiaoman.app.settings.SettingsForm
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+
+/** The editable persona fields; saved into the `persona` / `profile` memory notes. */
+private data class PersonaForm(
+    val tone: String = "",
+    val details: String = "",
+    val identity: String = "",
+)
 
 @Composable
 fun SettingsScreen(graph: AppGraph) {
@@ -46,12 +58,74 @@ fun SettingsScreen(graph: AppGraph) {
     var form by remember { mutableStateOf(SettingsForm.of(store.current)) }
     var saved by remember { mutableStateOf(false) }
     val parsed = form.toSettings()
+    val scope = rememberCoroutineScope()
+    var persona by remember { mutableStateOf<PersonaForm?>(null) }
+    var personaSaved by remember { mutableStateOf(false) }
+    var personaError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val personaNote = graph.memory.read(Persona.PERMALINK)
+        val profileNote = graph.memory.read(Persona.PROFILE_PERMALINK)
+        persona = PersonaForm(
+            tone = Persona.tone(personaNote),
+            details = Persona.detailsText(personaNote),
+            identity = Persona.identity(profileNote),
+        )
+    }
+
+    val savePersona: () -> Unit = {
+        val current = persona
+        if (current != null) {
+            val tone = current.tone.trim()
+            val details = Persona.cleanDetails(current.details)
+            val problem = if (tone.isEmpty() && details.isEmpty()) null else Persona.problem(tone, details)
+            if (problem != null) {
+                personaSaved = false
+                personaError = true
+            } else {
+                scope.launch {
+                    try {
+                        if (tone.isEmpty() && details.isEmpty()) {
+                            graph.memory.delete(Persona.PERMALINK)
+                        } else {
+                            graph.memory.write(Persona.note(tone, details, graph.memory.read(Persona.PERMALINK)))
+                        }
+                        val identity = current.identity.trim()
+                        val profile = graph.memory.read(Persona.PROFILE_PERMALINK)
+                        if (identity.isNotEmpty() || profile != null) {
+                            graph.memory.write(Persona.profileNote(identity, profile))
+                        }
+                        personaSaved = true
+                        personaError = false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        personaSaved = false
+                        personaError = true
+                    }
+                }
+            }
+        }
+    }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge)
+
+        PersonaSection(
+            form = persona,
+            saved = personaSaved,
+            failed = personaError,
+            onChange = {
+                persona = it
+                personaSaved = false
+                personaError = false
+            },
+            onSave = savePersona,
+        )
+        HorizontalDivider()
 
         ModelSection(stringResource(R.string.settings_chat_model), form.chat) {
             form = form.copy(chat = it)
@@ -110,6 +184,61 @@ fun SettingsScreen(graph: AppGraph) {
         Text(stringResource(R.string.settings_folder_skills, graph.skillsDir.path), style = MaterialTheme.typography.bodySmall)
         Text(stringResource(R.string.settings_folder_memory, graph.memoryDir.path), style = MaterialTheme.typography.bodySmall)
         Text(stringResource(R.string.settings_folder_traces, graph.tracesDir.path), style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun PersonaSection(
+    form: PersonaForm?,
+    saved: Boolean,
+    failed: Boolean,
+    onChange: (PersonaForm) -> Unit,
+    onSave: () -> Unit,
+) {
+    Text(stringResource(R.string.settings_persona), style = MaterialTheme.typography.titleMedium)
+    if (form == null) {
+        Text(stringResource(R.string.settings_persona_loading), style = MaterialTheme.typography.bodySmall)
+        return
+    }
+    OutlinedTextField(
+        value = form.tone,
+        onValueChange = { onChange(form.copy(tone = it)) },
+        label = { Text(stringResource(R.string.settings_persona_tone)) },
+        supportingText = { Text(stringResource(R.string.settings_persona_tone_hint)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = form.details,
+        onValueChange = { onChange(form.copy(details = it)) },
+        label = { Text(stringResource(R.string.settings_persona_details)) },
+        supportingText = { Text(stringResource(R.string.settings_persona_details_hint)) },
+        minLines = 3,
+        maxLines = 6,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = form.identity,
+        onValueChange = { onChange(form.copy(identity = it)) },
+        label = { Text(stringResource(R.string.settings_persona_identity)) },
+        supportingText = { Text(stringResource(R.string.settings_persona_identity_hint)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Button(onClick = onSave) { Text(stringResource(R.string.settings_persona_save)) }
+        if (saved) {
+            Text(
+                stringResource(R.string.settings_persona_saved),
+                modifier = Modifier.padding(start = 12.dp).semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
+        if (failed) {
+            Text(
+                stringResource(R.string.settings_persona_invalid),
+                modifier = Modifier.padding(start = 12.dp).semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
     }
 }
 

@@ -21,6 +21,7 @@ import dev.xiaoman.api.Sentinel
 import dev.xiaoman.api.Skill
 import dev.xiaoman.api.SkillChannel
 import dev.xiaoman.api.SkillRepository
+import dev.xiaoman.api.SkillWriter
 import dev.xiaoman.api.StopSignal
 import dev.xiaoman.api.UserChannel
 import kotlinx.coroutines.CancellationException
@@ -49,7 +50,12 @@ class XiaomanAgent(
     private val idFactory: () -> String = { UUID.randomUUID().toString() },
     /** Extra tools such as MCP servers; their names must not shadow the built-in ones. */
     private val externalTools: ToolProvider? = null,
+    /** Enables create/update/delete skill tools; null keeps chat read-only for skills. */
+    private val skillWriter: SkillWriter? = null,
+    /** Overrides draft ids in tests; drafts live for the agent instance so a later turn can commit. */
+    private val draftIdFactory: () -> String = { UUID.randomUUID().toString() },
 ) : Agent {
+    private val skillDrafts = PendingSkillDrafts(idFactory = draftIdFactory)
     private val loop = OperatorLoop(operator, device, sentinel, users, config)
     private val flows = FlowRunner(loop, users)
     private val historyLock = Mutex()
@@ -58,7 +64,12 @@ class XiaomanAgent(
     override suspend fun handle(userMessage: String, listener: AgentListener, stop: StopSignal) {
         val taskId = idFactory()
         val emit: (AgentEvent) -> Unit = listener::onEvent
-        val tools = ChatTools(memory, skills, clock, reminders, externalTools, phoneTasks = config.phoneTasks) { goal, skill ->
+        val tools = ChatTools(
+            memory, skills, clock, reminders, externalTools,
+            skillWriter = skillWriter,
+            skillDrafts = skillDrafts,
+            phoneTasks = config.phoneTasks,
+        ) { goal, skill ->
             runPhoneTask(goal, skill, listener, stop)
         }
         try {
@@ -130,8 +141,15 @@ class XiaomanAgent(
         return finish(outcome.success, outcome.summary, task.steps)
     }
 
-    private fun builtInSpecs(): List<ToolSpec> =
-        if (config.phoneTasks) AgentTools.specs else AgentTools.specs.filter { it.name != AgentTools.PHONE_TASK }
+    private fun builtInSpecs(): List<ToolSpec> {
+        var specs = AgentTools.specs
+        if (!config.phoneTasks) specs = specs.filter { it.name != AgentTools.PHONE_TASK }
+        if (skillWriter == null) {
+            val skillTools = setOf(AgentTools.CREATE_SKILL, AgentTools.UPDATE_SKILL, AgentTools.DELETE_SKILL)
+            specs = specs.filter { it.name !in skillTools }
+        }
+        return specs
+    }
 
     /** External tools that do not clash with built-in names; a failing provider simply offers nothing. */
     private suspend fun externalSpecs(): List<ToolSpec> {
@@ -148,6 +166,17 @@ class XiaomanAgent(
 
     private suspend fun systemPrompt(userMessage: String, hasExternalTools: Boolean = false): String = buildString {
         append(persona.trim())
+        val personaText = Persona.section(quietly(null) { memory.read(Persona.PERMALINK) })
+        val profileText =
+            if (personaText.isEmpty()) "" else Persona.profileSection(quietly(null) { memory.read(Persona.PROFILE_PERMALINK) })
+        if (personaText.isNotEmpty()) {
+            append("\n\n").append(Prompts.PERSONA_HEADER).append('\n').append(personaText)
+            append("\n\n").append(Prompts.PERSONA_BOUNDARY)
+            append("\n\n").append(Prompts.PERSONA_ADAPT_RULES)
+            if (profileText.isNotEmpty()) {
+                append("\n\n").append(Prompts.PROFILE_HEADER).append('\n').append(profileText)
+            }
+        }
         if (hasExternalTools) append("\n").append(Prompts.EXTERNAL_TOOLS_HINT)
         append("\n\n").append(Prompts.nowSection(ReminderTimes.promptNow(clock())))
         val list = quietly(emptyList()) { skills.list() }
@@ -178,6 +207,8 @@ class XiaomanAgent(
             }
         }
         val hits = quietly(emptyList()) { memory.search(userMessage, MEMORY_HITS) }
+            .filterNot { it.permalink == Persona.PERMALINK }
+            .filterNot { profileText.isNotEmpty() && it.permalink == Persona.PROFILE_PERMALINK }
         if (hits.isNotEmpty()) {
             append("\n\n").append(Prompts.MEMORY_HEADER).append('\n')
             hits.forEach { append("- ").append(it.title).append(" (").append(it.permalink).append("): ").append(it.snippet.replace('\n', ' ')).append('\n') }

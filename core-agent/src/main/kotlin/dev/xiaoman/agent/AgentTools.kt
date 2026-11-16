@@ -14,7 +14,11 @@ object AgentTools {
     const val MEMORY_READ = "memory_read"
     const val MEMORY_WRITE = "memory_write"
     const val MEMORY_FORGET = "memory_forget"
+    const val PERSONA_SET = "persona_set"
     const val LIST_SKILLS = "list_skills"
+    const val CREATE_SKILL = "create_skill"
+    const val UPDATE_SKILL = "update_skill"
+    const val DELETE_SKILL = "delete_skill"
     const val REMINDER_SET = "reminder_set"
     const val PHONE_TASK = "phone_task"
 
@@ -55,7 +59,45 @@ object AgentTools {
             MEMORY_FORGET, "删除一条记忆笔记（真正删除文件）。仅在用户明确要求忘记时使用。",
             schema(listOf("identifier"), "identifier" to str("笔记的 permalink 或标题")),
         ),
+        ToolSpec(
+            PERSONA_SET,
+            "设定或修改小满的性格（写入 persona 记忆笔记）。用户明确要求改变说话风格、人设或性格细节时使用；先复述将写入的基调和细节，用户明确同意后再调用。只影响语气、详略和引导方式，不改变工具调用和安全规则。用户同时说明职业或专业领域时，先用 memory_write 写入个人档案（permalink=profile，type=profile，类别 identity），再调用本工具。",
+            schema(
+                listOf("tone"),
+                "tone" to str("性格基调，一句话，如 知无不言的亲密导师"),
+                "details" to arr("性格细节，每条一个规则，如 设计类问题直接给专业结论", str("细节")),
+            ),
+        ),
         ToolSpec(LIST_SKILLS, "列出所有可用的手机操作技能。", schema(emptyList())),
+        ToolSpec(
+            CREATE_SKILL,
+            "新建用户技能（写 SKILL.md）。第一次调用只生成草稿，把返回的 draft 原样给用户看并等确认；用户下一条消息明确同意后，再次调用本工具即可提交，draftId 可省略（会复用上一轮草稿），不要编造 draftId。",
+            schema(
+                listOf("name", "markdown"),
+                "name" to str("技能名，只能用 a-z、0-9 和 -，如 taxi-home"),
+                "markdown" to str("完整的 SKILL.md 内容，含 frontmatter 和正文；提交时必须与用户确认过的草稿完全一致"),
+                "draftId" to str("可选。省略即复用上一轮同 name 的草稿；如填写必须是上一轮返回的原值，不要编造"),
+            ),
+        ),
+        ToolSpec(
+            UPDATE_SKILL,
+            "修改用户技能（整份 SKILL.md 替换）。同样两段式：先出草稿等用户确认，用户同意后再次调用即可提交（draftId 可省略）。只存在于内置技能时会创建用户覆盖副本。",
+            schema(
+                listOf("name", "markdown"),
+                "name" to str("要修改的技能名"),
+                "markdown" to str("替换后的完整 SKILL.md 内容；提交时必须与用户确认过的草稿完全一致"),
+                "draftId" to str("可选。省略即复用上一轮同 name 的草稿；如填写必须是上一轮返回的原值，不要编造"),
+            ),
+        ),
+        ToolSpec(
+            DELETE_SKILL,
+            "删除用户技能。两段式：先返回将删除的技能名等用户确认，用户同意后再次调用即可删除（draftId 可省略）。内置技能不能删除。",
+            schema(
+                listOf("name"),
+                "name" to str("要删除的技能名"),
+                "draftId" to str("可选。省略即复用上一轮同 name 的删除确认；如填写必须是上一轮返回的原值，不要编造"),
+            ),
+        ),
         ToolSpec(
             REMINDER_SET,
             "设置一条定时提醒：到点后小满会在手机上弹出通知。",

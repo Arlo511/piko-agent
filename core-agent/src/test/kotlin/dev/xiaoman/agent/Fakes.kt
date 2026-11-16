@@ -24,8 +24,13 @@ import dev.xiaoman.api.ScreenState
 import dev.xiaoman.api.SearchHit
 import dev.xiaoman.api.Sentinel
 import dev.xiaoman.api.Skill
+import dev.xiaoman.api.SkillDeleteResult
+import dev.xiaoman.api.SkillDraft
 import dev.xiaoman.api.SkillLoadResult
+import dev.xiaoman.api.SkillProblem
 import dev.xiaoman.api.SkillRepository
+import dev.xiaoman.api.SkillWriteResult
+import dev.xiaoman.api.SkillWriter
 import dev.xiaoman.api.StopSignal
 import dev.xiaoman.api.ToolCall
 import dev.xiaoman.api.UiNode
@@ -112,6 +117,46 @@ class FakeSkills(vararg skills: Skill) : SkillRepository {
     override suspend fun get(name: String) = all.firstOrNull { it.name == name }
 }
 
+/** Records skill writes; [writeResult]/[removeResult] force a failure branch when set. */
+class FakeSkillWriter(
+    var userSkills: MutableSet<String> = mutableSetOf(),
+    var builtInSkills: Set<String> = emptySet(),
+    var problems: List<SkillProblem> = emptyList(),
+    var writeResult: SkillWriteResult? = null,
+    var removeResult: SkillDeleteResult? = null,
+) : SkillWriter {
+    val created = mutableListOf<SkillDraft>()
+    val updated = mutableListOf<SkillDraft>()
+    val deleted = mutableListOf<String>()
+
+    override suspend fun validate(name: String, markdown: String): List<SkillProblem> = problems
+
+    override suspend fun create(draft: SkillDraft): SkillWriteResult {
+        created += draft
+        writeResult?.let { return it }
+        userSkills += draft.name
+        return SkillWriteResult.Ok(draft.name, created = true, overridesBuiltIn = draft.name in builtInSkills)
+    }
+
+    override suspend fun update(name: String, markdown: String): SkillWriteResult {
+        updated += SkillDraft(name, markdown)
+        writeResult?.let { return it }
+        userSkills += name
+        return SkillWriteResult.Ok(name, created = false, overridesBuiltIn = name in builtInSkills)
+    }
+
+    override suspend fun delete(name: String): SkillDeleteResult {
+        deleted += name
+        removeResult?.let { return it }
+        userSkills -= name
+        return SkillDeleteResult.Ok(name)
+    }
+
+    override suspend fun userSkillExists(name: String): Boolean = name in userSkills
+
+    override suspend fun isBuiltIn(name: String): Boolean = name in builtInSkills
+}
+
 fun skill(name: String, description: String = name, flow: dev.xiaoman.api.Flow? = null, deeplinks: Map<String, String> = emptyMap(), memoryRefs: List<String> = emptyList()) =
     Skill(name = name, description = description, apps = listOf("com.example.app"), deeplinks = deeplinks, memoryRefs = memoryRefs, instructions = "按步骤操作 $name", flow = flow, source = "test")
 
@@ -167,9 +212,17 @@ class Harness(
     val reminders: FakeReminderScheduler = FakeReminderScheduler(),
     val config: AgentConfig = AgentConfig(),
     val clock: () -> Long = { 1000L },
+    val skillWriter: FakeSkillWriter? = FakeSkillWriter(),
 ) {
     private var ids = 0
-    val agent = XiaomanAgent(chat, operator, device, memory, skills, sentinel, users, reminders, config, clock = clock, idFactory = { "t${++ids}" })
+    private var draftIds = 0
+    val agent = XiaomanAgent(
+        chat, operator, device, memory, skills, sentinel, users, reminders, config,
+        clock = clock,
+        idFactory = { "t${++ids}" },
+        skillWriter = skillWriter,
+        draftIdFactory = { "draft-${++draftIds}" },
+    )
     val events = Events()
     val stop = Stop()
 }

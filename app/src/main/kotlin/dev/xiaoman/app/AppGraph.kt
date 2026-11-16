@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import dev.xiaoman.agent.XiaomanAgent
 import dev.xiaoman.api.Agent
+import dev.xiaoman.api.AgentEvent
 import dev.xiaoman.api.ModelRole
 import dev.xiaoman.app.session.AgentSession
 import dev.xiaoman.app.session.SessionTexts
@@ -33,7 +34,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 import java.io.IOException
 
@@ -104,6 +109,11 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
     val runIds = RunIds()
     val uiVisible = MutableStateFlow(false)
 
+    private val _skillsChanged = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Emits after a chat tool creates/updates/deletes a skill, so 技能 page reloads without a broadcast. */
+    val skillsChanged: SharedFlow<Unit> = _skillsChanged.asSharedFlow()
+
     val traces by lazy {
         TraceWriter(
             root = tracesDir,
@@ -164,6 +174,7 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
             config = current.agentConfig(),
             idFactory = runIds::next,
             externalTools = mcpFor(key.second),
+            skillWriter = skills,
         )
         cachedAgent = key to agent
         return agent
@@ -178,6 +189,15 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
         }
         scope.launch(Dispatchers.Main.immediate) { session.approval.collect(notifier::showApproval) }
         scope.launch(Dispatchers.Main.immediate) { session.question.collect(notifier::showQuestion) }
+        scope.launch(Dispatchers.IO) {
+            session.events.collect { event ->
+                if (event is AgentEvent.SkillsUpdated) {
+                    val result = skills.reload()
+                    logSkillProblems(result.skills.size, result.problems)
+                    _skillsChanged.tryEmit(Unit)
+                }
+            }
+        }
     }
 
     private suspend fun prepareSkills() {

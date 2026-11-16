@@ -83,3 +83,46 @@ interface SkillRepository {
 
     suspend fun get(name: String): Skill?
 }
+
+/** A complete `SKILL.md` draft produced by the chat model; [markdown] is the whole file. */
+data class SkillDraft(val name: String, val markdown: String)
+
+/** Result of creating or updating a user skill. */
+sealed class SkillWriteResult {
+    /** [created] is true when the user folder did not exist; [overridesBuiltIn] when a bundled skill has the same name. */
+    data class Ok(val name: String, val created: Boolean, val overridesBuiltIn: Boolean) : SkillWriteResult()
+
+    /** The draft did not pass the same validation used when loading skills; nothing was written. */
+    data class Invalid(val problems: List<SkillProblem>) : SkillWriteResult()
+
+    data class Rejected(val reason: String) : SkillWriteResult()
+}
+
+sealed class SkillDeleteResult {
+    data class Ok(val name: String) : SkillDeleteResult()
+
+    data class Rejected(val reason: String) : SkillDeleteResult()
+}
+
+/**
+ * Writes user skills only: the user skills root is writable, bundled skills are read-only.
+ *
+ * Implementations must validate a draft with the loading rules before writing, must never leave a
+ * half-written `SKILL.md` behind, and must reject names outside `[a-z0-9-]+` or paths escaping the
+ * user root.
+ */
+interface SkillWriter {
+    /** Validation problems of [markdown] as if it were saved as folder [name]; empty when it would load. */
+    suspend fun validate(name: String, markdown: String): List<SkillProblem>
+
+    suspend fun create(draft: SkillDraft): SkillWriteResult
+
+    suspend fun update(name: String, markdown: String): SkillWriteResult
+
+    suspend fun delete(name: String): SkillDeleteResult
+
+    suspend fun userSkillExists(name: String): Boolean
+
+    /** True when a bundled skill with [name] is installed; bundled skills cannot be deleted. */
+    suspend fun isBuiltIn(name: String): Boolean
+}

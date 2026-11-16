@@ -22,6 +22,9 @@ sealed class AgentEvent {
 
     data class MemoryUpdated(override val taskId: String, val permalink: String) : AgentEvent()
 
+    /** A user skill was created, updated or deleted; the skill list must be reloaded. */
+    data class SkillsUpdated(override val taskId: String, val skillName: String) : AgentEvent()
+
     /** A [ToolProvider] tool (for example an MCP server) ran; [summary] is short and never contains secrets. */
     data class ToolCalled(override val taskId: String, val tool: String, val ok: Boolean, val summary: String) : AgentEvent()
 

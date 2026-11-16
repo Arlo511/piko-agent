@@ -1,9 +1,13 @@
 package dev.xiaoman.skills
 
 import dev.xiaoman.api.Skill
+import dev.xiaoman.api.SkillDeleteResult
+import dev.xiaoman.api.SkillDraft
 import dev.xiaoman.api.SkillLoadResult
 import dev.xiaoman.api.SkillProblem
 import dev.xiaoman.api.SkillRepository
+import dev.xiaoman.api.SkillWriteResult
+import dev.xiaoman.api.SkillWriter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -11,6 +15,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /**
  * Loads skills from folders `<root>/<name>/SKILL.md` (+ optional `flow.yaml`).
@@ -25,8 +32,15 @@ import java.io.IOException
 class DirectorySkillRepository(
     private val roots: List<File>,
     private val io: CoroutineDispatcher = Dispatchers.IO,
-) : SkillRepository {
+) : SkillRepository, SkillWriter {
     private val mutex = Mutex()
+
+    /** Serializes writes and reloads so a reader never sees a half-written skill. */
+    private val writeMutex = Mutex()
+
+    /** The last root is the user folder; earlier roots are bundled and read-only. */
+    private val userRoot: File? = roots.lastOrNull()
+    private val builtInRoots: List<File> = roots.dropLast(1)
 
     @Volatile
     private var state: State? = null
@@ -52,9 +66,105 @@ class DirectorySkillRepository(
         State(SkillLoadResult(skills, problems), skills.associateBy { it.name })
     }.also { state = it }
 
+    override suspend fun validate(name: String, markdown: String): List<SkillProblem> {
+        if (!isValidName(name)) return listOf(SkillProblem("draft", "name '$name' must match [a-z0-9-]+", null))
+        val (skill, problems) = SkillParser.parseFolder(name, markdown, flowYaml = null, source = "draft/$name")
+        return if (skill == null && problems.isEmpty()) {
+            listOf(SkillProblem("draft/$name/SKILL.md", "SKILL.md 无法解析", null))
+        } else {
+            problems
+        }
+    }
+
+    override suspend fun create(draft: SkillDraft): SkillWriteResult = writeMutex.withLock {
+        val dir = userDirFor(draft.name) ?: return@withLock rejectedName(draft.name)
+        if (File(dir, SKILL_FILE).isFile) {
+            return@withLock SkillWriteResult.Rejected("同名技能已存在：${draft.name}，请用 update_skill 修改")
+        }
+        if (dir.exists()) return@withLock SkillWriteResult.Rejected("用户技能目录里已有同名文件夹：${draft.name}")
+        writeLocked(dir, draft.name, draft.markdown, created = true)
+    }
+
+    override suspend fun update(name: String, markdown: String): SkillWriteResult = writeMutex.withLock {
+        val dir = userDirFor(name) ?: return@withLock rejectedName(name)
+        val exists = File(dir, SKILL_FILE).isFile
+        val builtIn = isBuiltIn(name)
+        if (!exists && !builtIn) return@withLock SkillWriteResult.Rejected("技能不存在：$name")
+        if (!exists && dir.exists()) return@withLock SkillWriteResult.Rejected("用户技能目录里已有同名文件夹：$name")
+        writeLocked(dir, name, markdown, created = !exists)
+    }
+
+    override suspend fun delete(name: String): SkillDeleteResult = writeMutex.withLock {
+        val dir = userDirFor(name) ?: return@withLock SkillDeleteResult.Rejected("技能名不合法：$name")
+        withContext(io) {
+            if (!File(dir, SKILL_FILE).isFile) {
+                return@withContext if (isBuiltIn(name)) {
+                    SkillDeleteResult.Rejected("内置技能不可删除：$name")
+                } else {
+                    SkillDeleteResult.Rejected("技能不存在：$name")
+                }
+            }
+            if (!dir.deleteRecursively()) return@withContext SkillDeleteResult.Rejected("删除失败：$name")
+            reload()
+            SkillDeleteResult.Ok(name)
+        }
+    }
+
+    override suspend fun userSkillExists(name: String): Boolean =
+        userDirFor(name)?.let { File(it, SKILL_FILE).isFile } ?: false
+
+    override suspend fun isBuiltIn(name: String): Boolean =
+        isValidName(name) && builtInRoots.any { File(File(it, name), SKILL_FILE).isFile }
+
+    private fun isValidName(name: String): Boolean = SkillParser.NAME.matches(name) && name.length <= MAX_NAME_LENGTH
+
+    /** Resolves `<userRoot>/<name>`; null when the name is invalid or the path escapes the user root. */
+    private fun userDirFor(name: String): File? {
+        if (!isValidName(name)) return null
+        val root = userRoot ?: return null
+        val dir = File(root, name).canonicalFile
+        return if (dir.parentFile == root.canonicalFile) dir else null
+    }
+
+    private fun rejectedName(name: String) = SkillWriteResult.Rejected(
+        if (userRoot == null) "没有可写的用户技能目录" else "技能名不合法：'$name'，只能用 a-z、0-9 和 -",
+    )
+
+    /** Writes `SKILL.md.tmp`, validates it, then renames atomically; a failed draft leaves nothing behind. */
+    private suspend fun writeLocked(dir: File, name: String, markdown: String, created: Boolean): SkillWriteResult = withContext(io) {
+        val madeDir = !dir.exists()
+        if (madeDir && !dir.mkdirs()) return@withContext SkillWriteResult.Rejected("无法创建目录：${dir.path}")
+        val tmp = File(dir, "$SKILL_FILE.tmp")
+        val file = File(dir, SKILL_FILE)
+        try {
+            tmp.writeText(markdown, Charsets.UTF_8)
+            val problems = validate(name, tmp.readText(Charsets.UTF_8))
+            if (problems.isNotEmpty()) {
+                tmp.delete()
+                if (created) dir.deleteRecursively()
+                return@withContext SkillWriteResult.Invalid(problems)
+            }
+            try {
+                Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+            } catch (e: AtomicMoveNotSupportedException) {
+                Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            }
+        } catch (e: Exception) {
+            tmp.delete()
+            if (created) dir.deleteRecursively()
+            return@withContext SkillWriteResult.Rejected("写入失败：${e.message ?: e::class.simpleName}")
+        }
+        val overridesBuiltIn = isBuiltIn(name)
+        reload()
+        SkillWriteResult.Ok(name, created, overridesBuiltIn)
+    }
+
     private class State(val result: SkillLoadResult, val byName: Map<String, Skill>)
 
     companion object {
+        private const val SKILL_FILE = "SKILL.md"
+        private const val MAX_NAME_LENGTH = 40
+
         /** Loads one root without overrides; duplicate skill names inside it are problems. */
         fun loadRoot(root: File): SkillLoadResult {
             if (!root.exists()) return SkillLoadResult(emptyList(), emptyList())

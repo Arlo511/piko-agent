@@ -58,6 +58,17 @@
 
     <!-- Settings -->
     <string name="settings_title">设置</string>
+    <string name="settings_persona">性格</string>
+    <string name="settings_persona_loading">正在读取…</string>
+    <string name="settings_persona_tone">性格</string>
+    <string name="settings_persona_tone_hint">例如：知无不言的亲密导师</string>
+    <string name="settings_persona_details">性格细节（每行一条）</string>
+    <string name="settings_persona_details_hint">例如：设计类问题直接给专业结论；其他问题少用术语、解释更详细，并引导我思考</string>
+    <string name="settings_persona_identity">我的专业领域 / 身份（可选）</string>
+    <string name="settings_persona_identity_hint">例如：设计师</string>
+    <string name="settings_persona_save">保存性格</string>
+    <string name="settings_persona_saved">性格已保存</string>
+    <string name="settings_persona_invalid">保存失败：请检查性格基调是否为空或内容过长</string>
     <string name="settings_chat_model">聊天模型</string>
     <string name="settings_operator_model">操作模型（需支持图片）</string>
     <string name="settings_base_url">Base URL</string>
