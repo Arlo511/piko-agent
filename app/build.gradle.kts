@@ -36,7 +36,7 @@ android {
     namespace = "dev.xiaoman.app"
     compileSdk = 35
     defaultConfig {
-        applicationId = "dev.xiaoman.app"
+        applicationId = "dev.piko.app"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

@@ -22,7 +22,7 @@ class ChatTurnTest {
         assertEquals(listOf("你好，我是小满。"), h.events.of<AgentEvent.Reply>().map { it.text })
         val first = h.chat.requests[0]
         val system = first.messages[0].text
-        assertTrue(system.startsWith("你是小满"))
+        assertTrue(system.startsWith("你是小可"))
         assertTrue("- taxi-home: 打车回家" in system)
         assertTrue("places/家" in system && "某某路" in system)
         assertEquals(AgentTools.specs.map { it.name }, first.tools.map { it.name })

@@ -14,8 +14,8 @@ from xiaoman_cli.adb import Adb, broadcast_command  # noqa: E402
 from xiaoman_cli.main import build_parser, main, new_run_id  # noqa: E402
 
 FIXTURE = os.path.join(HERE, "fixtures", "skills", "ride-home")
-SKILLS = "/sdcard/Android/data/dev.xiaoman.app/files/skills"
-RECEIVER = "dev.xiaoman.app/.debug.DebugReceiver"
+SKILLS = "/sdcard/Android/data/dev.piko.app/files/skills"
+RECEIVER = "dev.piko.app/dev.xiaoman.app.debug.DebugReceiver"
 
 
 class Result:
@@ -248,7 +248,7 @@ class TracesCommandTest(unittest.TestCase):
             code, out, _ = fake.run_main(["traces", "pull", "r1", "--out", out_dir])
             self.assertEqual(code, 0)
             self.assertEqual(fake.calls[0][1], ["adb", "pull",
-                                                "/sdcard/Android/data/dev.xiaoman.app/files/traces/r1", out_dir])
+                                                "/sdcard/Android/data/dev.piko.app/files/traces/r1", out_dir])
             self.assertTrue(os.path.isdir(out_dir))
             self.assertIn(os.path.join(out_dir, "r1"), out)
         finally:

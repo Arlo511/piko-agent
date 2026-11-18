@@ -92,7 +92,7 @@ class PolicySentinelTest {
         assertIs<Decision.Deny>(sentinel.guard(ctx(), Action.LaunchApp("com.tencent.mm")))
         assertIs<Decision.Allow>(sentinel.guard(ctx(), Action.LaunchApp("com.autonavi.minimap")))
         assertIs<Decision.Allow>(sentinel.guard(ctx(), Action.LaunchApp("com.android.launcher3")))
-        assertIs<Decision.Allow>(sentinel.guard(ctx(), Action.LaunchApp("dev.xiaoman.app")))
+        assertIs<Decision.Allow>(sentinel.guard(ctx(), Action.LaunchApp("dev.piko.app")))
         // No apps listed, or no skill: unrestricted.
         assertIs<Decision.Allow>(sentinel.guard(ctx(skill = didi.copy(apps = emptyList())), Action.LaunchApp("com.tencent.mm")))
         assertIs<Decision.Allow>(sentinel.guard(ctx(skill = null), Action.LaunchApp("com.tencent.mm")))
@@ -112,7 +112,7 @@ class PolicySentinelTest {
         assertIs<Decision.Deny>(sentinel.guard(foreign, Action.TypeText("hi")))
         assertIs<Decision.Allow>(sentinel.guard(foreign, Action.Back()))
         assertIs<Decision.Allow>(sentinel.guard(ctx(screen = screen(pkg = "com.miui.home")), Action.Tap(Point(1, 1))))
-        assertIs<Decision.Allow>(sentinel.guard(ctx(screen = screen(pkg = "dev.xiaoman.app")), Action.Tap(Point(1, 1))))
+        assertIs<Decision.Allow>(sentinel.guard(ctx(screen = screen(pkg = "dev.piko.app")), Action.Tap(Point(1, 1))))
         val systemUi = ctx(screen = screen(pkg = "com.android.systemui"))
         assertIs<Decision.Deny>(sentinel.guard(systemUi, Action.Tap(Point(1, 1))))
         assertIs<Decision.Allow>(sentinel.guard(systemUi, Action.Home()))

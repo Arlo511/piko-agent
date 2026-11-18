@@ -45,7 +45,7 @@ class PolicySentinel(
     private val approvals: ApprovalGateway,
     private val audit: AuditSink,
     launcherPackages: Set<String> = DEFAULT_LAUNCHERS,
-    private val selfPackage: String = "dev.xiaoman.app",
+    private val selfPackage: String = "dev.piko.app",
     extraConfirmWords: List<String> = emptyList(),
     private val clock: () -> Long = System::currentTimeMillis,
 ) : Sentinel {

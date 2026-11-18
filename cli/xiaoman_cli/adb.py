@@ -10,11 +10,11 @@ import os
 import shlex
 import subprocess
 
-APP_PACKAGE = "dev.xiaoman.app"
+APP_PACKAGE = "dev.piko.app"
 EXTERNAL_FILES = "/sdcard/Android/data/%s/files" % APP_PACKAGE
 REMOTE_SKILLS = EXTERNAL_FILES + "/skills"
 REMOTE_TRACES = EXTERNAL_FILES + "/traces"
-RECEIVER = APP_PACKAGE + "/.debug.DebugReceiver"
+RECEIVER = APP_PACKAGE + "/dev.xiaoman.app.debug.DebugReceiver"
 ACTION_RUN = "dev.xiaoman.debug.RUN"
 ACTION_STOP = "dev.xiaoman.debug.STOP"
 ACTION_RELOAD = "dev.xiaoman.debug.RELOAD_SKILLS"

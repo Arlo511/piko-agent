@@ -61,7 +61,7 @@ class PersonaPromptTest {
         h.agent.handle("你好", h.events, h.stop)
 
         val system = h.chat.requests.single().messages[0].text
-        assertTrue(system.startsWith("你是小满"))
+        assertTrue(system.startsWith("你是小可"))
         assertFalse(Prompts.PERSONA_HEADER in system)
         assertFalse(Prompts.PROFILE_HEADER in system)
     }

@@ -34,7 +34,7 @@ class ApprovalScreenTest {
     }
 
     @Test fun approvalInXiaomanCannotTapOldCoordinates() = runTest {
-        val (result, device) = execute(screen("dev.xiaoman.app", "允许一次"))
+        val (result, device) = execute(screen("dev.piko.app", "允许一次"))
         assertIs<Executed.Blocked>(result)
         assertTrue(device.performed.isEmpty())
     }
@@ -61,7 +61,7 @@ class ApprovalScreenTest {
     }
 
     @Test fun waitsForAppSwitchBeforeUsingApprovedCoordinates() = runTest {
-        val (result, device) = execute(screen("dev.xiaoman.app", "允许一次"), restored = before)
+        val (result, device) = execute(screen("dev.piko.app", "允许一次"), restored = before)
         assertIs<Executed.Done>(result)
         assertEquals(listOf<Action>(tap), device.performed)
         assertEquals(2, device.observations)

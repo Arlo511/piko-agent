@@ -32,7 +32,7 @@ internal fun ChatHeader(ready: Boolean, busy: Boolean, attention: Boolean) {
             Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp)) }
         }
         Column(Modifier.weight(1f).padding(start = 10.dp)) {
-            Text("小满", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("小可", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("你的手机小助手", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Surface(shape = tokens.chipShape, color = MaterialTheme.colorScheme.primaryContainer) {
@@ -109,7 +109,7 @@ internal fun ChatMessage(item: ChatItem) {
             }
         }
         is ChatItem.Assistant -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("小满", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            Text("小可", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             SkinBubble(user = false) {
                 MarkdownContent(item.text, Modifier.padding(16.dp))
             }

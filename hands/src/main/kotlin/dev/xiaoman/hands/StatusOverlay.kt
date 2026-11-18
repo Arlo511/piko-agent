@@ -115,7 +115,7 @@ class StatusOverlay(private val context: Context) {
             text = pendingText
             minHeight = dp(48)
             gravity = Gravity.CENTER_VERTICAL
-            contentDescription = "查看小满的任务"
+            contentDescription = "查看小可的任务"
             setOnClickListener { onOpen() }
             // Read status changes to TalkBack users.
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -153,7 +153,7 @@ class StatusOverlay(private val context: Context) {
     ).apply {
         gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
         y = dp(36)
-        title = "Xiaoman status"
+        title = "Piko status"
     }
 
     private fun dp(v: Int): Int = (v * context.resources.displayMetrics.density).toInt()
