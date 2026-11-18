@@ -12,11 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.xiaoman.app.session.ChatItem
 
@@ -108,13 +105,13 @@ internal fun ChatMessage(item: ChatItem) {
     when (item) {
         is ChatItem.User -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             SkinBubble(user = true, modifier = Modifier.fillMaxWidth(0.90f)) {
-                Text(item.text, Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
+                MarkdownContent(item.text, Modifier.padding(14.dp), MarkdownScope.LITERAL)
             }
         }
         is ChatItem.Assistant -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("小满", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             SkinBubble(user = false) {
-                Text(chatRichText(item.text), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+                MarkdownContent(item.text, Modifier.padding(16.dp))
             }
         }
         is ChatItem.Question -> NoticeCard(if (item.takeover) "需要你帮一下" else "再告诉我一点", item.text, false)
@@ -131,19 +128,7 @@ private fun NoticeCard(title: String, body: String, error: Boolean) {
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall)
-            Text(chatRichText(body), style = MaterialTheme.typography.bodyMedium)
+            MarkdownContent(body)
         }
     }
-}
-
-/** Basic emphasis and lists from model replies, rendered as text rather than raw Markdown markers. */
-internal fun chatRichText(raw: String) = buildAnnotatedString {
-    val text = raw.replace(Regex("(?m)^#{1,6}\\s+"), "").replace(Regex("(?m)^[-*]\\s+"), "• ")
-    var position = 0
-    Regex("\\*\\*(.+?)\\*\\*").findAll(text).forEach { match ->
-        append(text.substring(position, match.range.first))
-        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(match.groupValues[1]) }
-        position = match.range.last + 1
-    }
-    append(text.substring(position))
 }

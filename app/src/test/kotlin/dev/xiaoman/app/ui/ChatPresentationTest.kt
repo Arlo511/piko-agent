@@ -30,13 +30,13 @@ class ChatPresentationTest {
         assertTrue(chatTimeline(emptyList()).isEmpty())
     }
 
-    @Test fun boldPriceAndListsRenderWithoutChangingTheirMeaning() {
-        val styled = chatRichText("- **合计**：**2.40元**\n尚未付款")
-        assertEquals("• 合计：2.40元\n尚未付款", styled.text)
+    @Test fun boldAndCodeRenderWithoutMarkers() {
+        val styled = inlineMarkdown("**合计**：`2.40` 元\n尚未付款")
+        assertEquals("合计：2.40 元\n尚未付款", styled.text)
         assertEquals(2, styled.spanStyles.size)
     }
 
     @Test fun unmatchedMarkersAndLiteralMathStayIntact() {
-        assertEquals("2 * 3 = 6，**未结束", chatRichText("2 * 3 = 6，**未结束").text)
+        assertEquals("2 * 3 = 6，**未结束", inlineMarkdown("2 * 3 = 6，**未结束").text)
     }
 }
