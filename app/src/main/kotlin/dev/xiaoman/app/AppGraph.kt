@@ -15,9 +15,11 @@ import dev.xiaoman.app.trace.TraceWriter
 import dev.xiaoman.hands.AccessibilityDevice
 import dev.xiaoman.hands.MutableStopSignal
 import dev.xiaoman.hands.XiaomanAccessibilityService
+import dev.xiaoman.app.settings.McpSettingsStore
+import dev.xiaoman.app.settings.ModelCatalog
 import dev.xiaoman.llm.LlmClientFactory
 import dev.xiaoman.llm.LlmClients
-import dev.xiaoman.app.settings.McpSettingsStore
+import dev.xiaoman.llm.ModelListClient
 import dev.xiaoman.mcp.McpCatalog
 import dev.xiaoman.mcp.McpConfig
 import dev.xiaoman.mcp.McpPlatform
@@ -69,6 +71,12 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
     val memory by lazy { FileMemoryStore(memoryDir) }
 
     val skills by lazy { DirectorySkillRepository(listOf(bundledSkillsDir, skillsDir)) }
+
+    /** Model ids shipped with the app; the settings dropdown falls back to this list. */
+    val modelCatalog: ModelCatalog by lazy { ModelCatalog.load(app) }
+
+    /** Reads `{baseUrl}/models` for the settings dropdown; never logs the key or body. */
+    val modelListClient: ModelListClient by lazy { ModelListClient.create() }
 
     val notifier by lazy { Notifier(app) }
 

@@ -13,10 +13,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -37,11 +42,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.xiaoman.agent.Persona
 import dev.xiaoman.app.AppGraph
 import dev.xiaoman.app.R
+import dev.xiaoman.app.settings.ModelCatalog
+import dev.xiaoman.app.settings.ModelOption
+import dev.xiaoman.app.settings.ModelSource
 import dev.xiaoman.app.settings.SettingsForm
+import dev.xiaoman.llm.ModelListResult
+import dev.xiaoman.llm.ModelListResult.Failure.Reason
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -127,15 +138,29 @@ fun SettingsScreen(graph: AppGraph) {
         )
         HorizontalDivider()
 
-        ModelSection(stringResource(R.string.settings_chat_model), form.chat) {
-            form = form.copy(chat = it)
-            saved = false
-        }
+        ModelSection(
+            title = stringResource(R.string.settings_chat_model),
+            model = form.chat,
+            onChange = {
+                form = form.copy(chat = it)
+                saved = false
+            },
+            catalog = graph.modelCatalog,
+            visionOnly = false,
+            refreshModels = { baseUrl, key -> graph.modelListClient.list(baseUrl, key) },
+        )
         HorizontalDivider()
-        ModelSection(stringResource(R.string.settings_operator_model), form.operator) {
-            form = form.copy(operator = it)
-            saved = false
-        }
+        ModelSection(
+            title = stringResource(R.string.settings_operator_model),
+            model = form.operator,
+            onChange = {
+                form = form.copy(operator = it)
+                saved = false
+            },
+            catalog = graph.modelCatalog,
+            visionOnly = true,
+            refreshModels = { baseUrl, key -> graph.modelListClient.list(baseUrl, key) },
+        )
         TextButton(onClick = {
             form = form.copy(operator = form.operator.copy(baseUrl = form.chat.baseUrl, apiKey = form.chat.apiKey))
             saved = false
@@ -242,9 +267,32 @@ private fun PersonaSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ModelSection(title: String, model: SettingsForm.ModelForm, onChange: (SettingsForm.ModelForm) -> Unit) {
+private fun ModelSection(
+    title: String,
+    model: SettingsForm.ModelForm,
+    onChange: (SettingsForm.ModelForm) -> Unit,
+    catalog: ModelCatalog,
+    visionOnly: Boolean,
+    refreshModels: suspend (baseUrl: String, apiKey: String) -> ModelListResult,
+) {
     var showKey by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    var remoteIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    var refreshing by remember { mutableStateOf(false) }
+    var refreshResult by remember { mutableStateOf<ModelListResult?>(null) }
+    var customEntry by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val options = catalog.options(model.model, remoteIds, visionOnly)
+    val selected = options.firstOrNull { it.id == model.model.trim() }
+
+    LaunchedEffect(model.baseUrl) {
+        remoteIds = emptyList()
+        refreshResult = null
+    }
+
     Text(title, style = MaterialTheme.typography.titleMedium)
     OutlinedTextField(
         value = model.baseUrl,
@@ -254,13 +302,133 @@ private fun ModelSection(title: String, model: SettingsForm.ModelForm, onChange:
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
-    OutlinedTextField(
-        value = model.model,
-        onValueChange = { onChange(model.copy(model = it)) },
-        label = { Text(stringResource(R.string.settings_model)) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    if (customEntry) {
+        OutlinedTextField(
+            value = model.model,
+            onValueChange = { onChange(model.copy(model = it)) },
+            label = { Text(stringResource(R.string.settings_model)) },
+            supportingText = { Text(stringResource(R.string.settings_model_custom_hint)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        TextButton(onClick = { customEntry = false }) {
+            Text(stringResource(R.string.settings_model_choose_from_list))
+        }
+    } else {
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+        ) {
+            OutlinedTextField(
+                value = selected?.let { modelLabel(it) }.orEmpty(),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.settings_model)) },
+                supportingText = { Text(supportingModelText(selected, catalog)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(modelLabel(option), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                if (option.source != ModelSource.CUSTOM) {
+                                    Text(
+                                        option.id,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        },
+                        trailingIcon = {
+                            val mark = when {
+                                option.source == ModelSource.BUILT_IN && option.vision ->
+                                    R.string.settings_model_vision_mark
+                                option.source == ModelSource.BUILT_IN -> R.string.settings_model_text_only_mark
+                                else -> R.string.settings_model_vision_unknown_mark
+                            }
+                            Text(
+                                stringResource(mark),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (option.vision) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        },
+                        onClick = {
+                            expanded = false
+                            customEntry = false
+                            onChange(model.copy(model = option.id))
+                        },
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.settings_model_custom_entry)) },
+                    onClick = {
+                        expanded = false
+                        customEntry = true
+                    },
+                )
+            }
+        }
+    }
+    if (visionOnly && selected?.vision == false) {
+        Text(
+            stringResource(R.string.settings_model_vision_warning),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TextButton(
+            enabled = model.apiKey.isNotBlank() && !refreshing,
+            onClick = {
+                refreshing = true
+                refreshResult = null
+                scope.launch {
+                    val result = refreshModels(model.baseUrl, model.apiKey)
+                    refreshing = false
+                    refreshResult = result
+                    remoteIds = if (result is ModelListResult.Success) result.modelIds else emptyList()
+                }
+            },
+        ) {
+            Text(stringResource(if (refreshing) R.string.settings_model_refreshing else R.string.settings_model_refresh))
+        }
+        if (model.apiKey.isBlank()) {
+            Text(stringResource(R.string.settings_model_refresh_need_key), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+    val result = refreshResult
+    if (result != null) {
+        val message = when (result) {
+            is ModelListResult.Success -> stringResource(
+                R.string.settings_model_refresh_ok,
+                result.modelIds.size,
+                catalog.options(model.model, remoteIds, visionOnly).size,
+            )
+            is ModelListResult.Failure -> when (result.reason) {
+                Reason.UNAUTHORIZED -> stringResource(R.string.settings_model_refresh_unauthorized)
+                Reason.UNSUPPORTED -> stringResource(R.string.settings_model_refresh_unsupported)
+                Reason.NETWORK -> stringResource(R.string.settings_model_refresh_network)
+                Reason.MALFORMED -> stringResource(R.string.settings_model_refresh_bad_body)
+                Reason.OTHER -> stringResource(R.string.settings_model_refresh_other, result.httpCode ?: 0)
+            }
+        }
+        Text(
+            message,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (result is ModelListResult.Success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        )
+    }
     OutlinedTextField(
         value = model.apiKey,
         onValueChange = { onChange(model.copy(apiKey = it)) },
@@ -288,4 +456,22 @@ private fun ModelSection(title: String, model: SettingsForm.ModelForm, onChange:
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
+}
+
+@Composable
+private fun modelLabel(option: ModelOption): String =
+    if (option.source == ModelSource.CUSTOM) {
+        stringResource(R.string.settings_model_custom_prefix, option.id)
+    } else {
+        option.displayName
+    }
+
+@Composable
+private fun supportingModelText(selected: ModelOption?, catalog: ModelCatalog): String = when {
+    selected == null -> stringResource(R.string.settings_model_hint)
+    selected.source == ModelSource.CUSTOM -> stringResource(R.string.settings_model_custom_hint)
+    selected.source == ModelSource.REMOTE -> "${selected.id} · ${stringResource(R.string.settings_model_remote_no_vision)}"
+    catalog.updatedAt.isNotBlank() ->
+        "${selected.id} · ${stringResource(R.string.settings_model_built_in, catalog.updatedAt)}"
+    else -> selected.id
 }
