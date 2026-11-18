@@ -1,5 +1,6 @@
 package dev.xiaoman.app.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,17 +10,21 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.xiaoman.app.R
 import dev.xiaoman.app.session.ChatItem
 
 @Composable
 internal fun ChatHeader(ready: Boolean, busy: Boolean, attention: Boolean) {
-    val tokens = LocalSkin.current.tokens
+    val skin = LocalSkin.current
+    val tokens = skin.tokens
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Surface(shape = tokens.avatarShape, color = MaterialTheme.colorScheme.primaryContainer,
             modifier = Modifier
@@ -29,7 +34,14 @@ internal fun ChatHeader(ready: Boolean, busy: Boolean, attention: Boolean) {
                     rotationY = -tokens.tiltDegrees / 2f
                     cameraDistance = 12f * density
                 }) {
-            Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp)) }
+            Box(contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(R.drawable.ic_piko_mark),
+                    contentDescription = null,
+                    modifier = Modifier.size(21.dp),
+                    colorFilter = if (skin.dark) ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer) else null,
+                )
+            }
         }
         Column(Modifier.weight(1f).padding(start = 10.dp)) {
             Text("小可", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
