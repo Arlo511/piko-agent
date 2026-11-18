@@ -46,6 +46,17 @@ class SettingsTest {
         assertTrue(key in secret)
     }
 
+    @Test fun `selected model ids round trip for chat and operator`() {
+        val selected = sample.copy(
+            chat = sample.chat.copy(model = "doubao-seed-2-1-turbo-260628"),
+            operator = sample.operator.copy(model = "deepseek-v4-1-flash-261017"),
+        )
+        store().save(selected)
+        val loaded = store().current
+        assertEquals("doubao-seed-2-1-turbo-260628", loaded.chat.model)
+        assertEquals("deepseek-v4-1-flash-261017", loaded.operator.model)
+    }
+
     @Test fun `toString never shows the api key`() {
         assertFalse(key in sample.toString())
         assertFalse(key in sample.chat.toString())
