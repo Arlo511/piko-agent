@@ -95,11 +95,11 @@ fun McpScreen(graph: AppGraph) {
         CustomServers(selection, status, ::update)
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = {
+            SkinButton(onClick = {
                 store.save(selection)
                 saved = true
             }) { Text(stringResource(R.string.settings_save)) }
-            OutlinedButton(enabled = !testing, onClick = {
+            SkinOutlinedButton(enabled = !testing, onClick = {
                 testing = true
                 scope.launch {
                     try {
@@ -119,7 +119,7 @@ fun McpScreen(graph: AppGraph) {
 private fun ServiceCard(server: CatalogServer, selection: McpSelection, status: ServerStatus?, onChange: (McpSelection) -> Unit) {
     val enabled = server.id in selection.enabled
     val uri = LocalUriHandler.current
-    Card(Modifier.fillMaxWidth()) {
+    SkinCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -183,7 +183,7 @@ private fun CustomServers(selection: McpSelection, status: Map<String, ServerSta
     Text(stringResource(R.string.mcp_custom_title), style = MaterialTheme.typography.titleMedium)
     Text(stringResource(R.string.mcp_custom_hint), style = MaterialTheme.typography.bodySmall)
     selection.custom.forEachIndexed { i, c ->
-        Card(Modifier.fillMaxWidth()) {
+        SkinCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

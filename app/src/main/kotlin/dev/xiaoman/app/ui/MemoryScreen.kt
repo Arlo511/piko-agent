@@ -133,6 +133,7 @@ private fun MemoryList(state: MemoryState, vm: MemoryViewModel) {
             onValueChange = vm::setQuery,
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             singleLine = true,
+            shape = LocalSkin.current.tokens.fieldShape,
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
             trailingIcon = {
                 if (state.query.isNotEmpty()) {
@@ -141,7 +142,7 @@ private fun MemoryList(state: MemoryState, vm: MemoryViewModel) {
             },
             placeholder = { Text(stringResource(R.string.memory_search_hint)) },
         )
-        if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (state.loading) SkinLinearProgress()
         if (!state.loading && state.rows.isEmpty()) {
             Text(
                 stringResource(if (state.query.isBlank()) R.string.memory_empty else R.string.memory_no_hits),
@@ -174,7 +175,7 @@ private fun NoteView(note: Note, markdown: String, onBack: () -> Unit, onDelete:
         }
         SelectionContainer {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(markdown, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+                Text(markdown, fontFamily = LocalSkin.current.tokens.noteFont, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }

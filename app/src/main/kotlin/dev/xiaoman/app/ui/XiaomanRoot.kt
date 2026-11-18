@@ -14,22 +14,18 @@ import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import dev.xiaoman.app.AppGraph
 import dev.xiaoman.app.R
 
@@ -45,27 +41,23 @@ enum class Tab(@StringRes val label: Int, val icon: ImageVector) {
 fun XiaomanRoot(graph: AppGraph) {
     var tab by rememberSaveable { mutableStateOf(Tab.CHAT) }
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    Scaffold(
-        bottomBar = {
-            if (!keyboardOpen) NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
-                Tab.entries.forEach { t ->
-                    NavigationBarItem(
-                        selected = tab == t,
-                        onClick = { tab = t },
-                        icon = { Icon(t.icon, contentDescription = null) },
-                        label = { Text(stringResource(t.label), style = MaterialTheme.typography.labelSmall) },
-                    )
+    Box(Modifier.fillMaxSize()) {
+        SkinBackground(Modifier.matchParentSize())
+        Scaffold(
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            bottomBar = {
+                if (!keyboardOpen) SkinNavigationBar(Tab.entries, tab) { tab = it }
+            },
+        ) { padding ->
+            Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+                when (tab) {
+                    Tab.CHAT -> ChatScreen(graph, onOpenSettings = { tab = Tab.SETTINGS })
+                    Tab.SKILLS -> SkillsScreen(graph)
+                    Tab.SERVICES -> McpScreen(graph)
+                    Tab.MEMORY -> MemoryScreen(graph)
+                    Tab.SETTINGS -> SettingsScreen(graph)
                 }
-            }
-        },
-    ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
-            when (tab) {
-                Tab.CHAT -> ChatScreen(graph, onOpenSettings = { tab = Tab.SETTINGS })
-                Tab.SKILLS -> SkillsScreen(graph)
-                Tab.SERVICES -> McpScreen(graph)
-                Tab.MEMORY -> MemoryScreen(graph)
-                Tab.SETTINGS -> SettingsScreen(graph)
             }
         }
     }

@@ -19,7 +19,19 @@ class SettingsStore(private val plain: SharedPreferences, internal val secret: S
     private val _settings = MutableStateFlow(load())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
+    private val _skin = MutableStateFlow(loadSkin())
+    val skin: StateFlow<SkinId> = _skin.asStateFlow()
+
     val current: AppSettings get() = _settings.value
+
+    val currentSkin: SkinId get() = _skin.value
+
+    /** Applies immediately and is kept apart from [save] so the model form cannot reset it. */
+    @Synchronized
+    fun saveSkin(skin: SkinId) {
+        plain.edit(commit = true) { putString(SKIN, skin.name) }
+        _skin.value = skin
+    }
 
     @Synchronized
     fun save(settings: AppSettings) {
@@ -46,6 +58,9 @@ class SettingsStore(private val plain: SharedPreferences, internal val secret: S
         )
     }
 
+    private fun loadSkin(): SkinId =
+        SkinId.entries.firstOrNull { it.name == plain.getString(SKIN, null) } ?: SkinId.XIAOMAN
+
     private fun model(prefix: String) = ModelSettings(
         baseUrl = plain.getString(prefix + BASE_URL, null) ?: ModelSettings.DEFAULT_BASE_URL,
         model = plain.getString(prefix + MODEL, null).orEmpty(),
@@ -71,6 +86,7 @@ class SettingsStore(private val plain: SharedPreferences, internal val secret: S
         private const val TEMPERATURE = "temperature"
         private const val MAX_STEPS = "agent.maxSteps"
         private const val LEARN = "agent.learnFromSuccess"
+        private const val SKIN = "ui.skin"
 
         fun create(context: Context): SettingsStore =
             SettingsStore(context.getSharedPreferences(PLAIN_FILE, Context.MODE_PRIVATE), encrypted(context))

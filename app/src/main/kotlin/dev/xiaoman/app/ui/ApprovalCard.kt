@@ -37,16 +37,18 @@ internal fun ApprovalCard(pending: PendingApproval, session: AgentSession) {
             session.answerApproval(ApprovalAnswer(true, approvalScope), pending.id)
         }
     }
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.large,
-        modifier = Modifier.fillMaxWidth().padding(12.dp).semantics { liveRegion = LiveRegionMode.Assertive }) {
+    SkinCard(
+        style = LocalSkin.current.tokens.approval,
+        modifier = Modifier.fillMaxWidth().padding(12.dp).semantics { liveRegion = LiveRegionMode.Assertive },
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("这一步，请你确认", style = MaterialTheme.typography.titleSmall)
             Text(pending.request.prompt, style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.heightIn(max = 110.dp).verticalScroll(rememberScrollState()))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = { responding = true; session.answerApproval(ApprovalAnswer(false), pending.id) },
+                SkinOutlinedButton(onClick = { responding = true; session.answerApproval(ApprovalAnswer(false), pending.id) },
                     enabled = !responding, modifier = Modifier.weight(1f)) { Text("暂不允许") }
-                Button(onClick = { approve(ApprovalScope.ONCE) }, enabled = !responding, modifier = Modifier.weight(1f)) { Text("允许一次") }
+                SkinButton(onClick = { approve(ApprovalScope.ONCE) }, enabled = !responding, modifier = Modifier.weight(1f)) { Text("允许一次") }
             }
             if (more) {
                 TextButton(onClick = { approve(ApprovalScope.TASK) }, enabled = !responding) {

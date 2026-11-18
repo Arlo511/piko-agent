@@ -58,6 +58,15 @@
 
     <!-- Settings -->
     <string name="settings_title">设置</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_skin_hint">选择后立即生效，并保存在本机。</string>
+    <string name="skin_xiaoman">小满</string>
+    <string name="skin_github">GitHub</string>
+    <string name="skin_ios">iOS</string>
+    <string name="skin_depth">2.5D</string>
+    <string name="skin_pixel">像素</string>
+    <string name="skin_in_use">使用中</string>
+    <string name="skin_tap_to_use">点击使用</string>
     <string name="settings_persona">性格</string>
     <string name="settings_persona_loading">正在读取…</string>
     <string name="settings_persona_tone">性格</string>

@@ -110,7 +110,7 @@ private fun ChatInput(text: String, onChange: (String) -> Unit, session: AgentSe
             OutlinedTextField(
                 value = text, onValueChange = onChange, modifier = Modifier.weight(1f),
                 placeholder = { Text(if (answering) "告诉我就好…" else "说说你想做什么…", style = MaterialTheme.typography.bodyMedium) },
-                shape = MaterialTheme.shapes.large, textStyle = MaterialTheme.typography.bodyMedium,
+                shape = LocalSkin.current.tokens.fieldShape, textStyle = MaterialTheme.typography.bodyMedium,
                 minLines = 1, maxLines = 4,
                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
@@ -118,7 +118,9 @@ private fun ChatInput(text: String, onChange: (String) -> Unit, session: AgentSe
             )
             Spacer(Modifier.width(8.dp))
             FilledIconButton(onClick = { if (busy && !answering) session.stop() else send() },
-                enabled = (busy && !answering) || canSend, modifier = Modifier.padding(bottom = 4.dp).size(48.dp)) {
+                enabled = (busy && !answering) || canSend,
+                shape = LocalSkin.current.tokens.buttonShape,
+                modifier = Modifier.padding(bottom = 4.dp).size(48.dp)) {
                 Icon(if (busy && !answering) Icons.Default.Stop else Icons.Default.ArrowUpward,
                     contentDescription = stringResource(if (busy && !answering) R.string.chat_stop else R.string.chat_send))
             }

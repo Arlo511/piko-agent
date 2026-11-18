@@ -1,11 +1,7 @@
 package dev.xiaoman.app.ui
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -13,27 +9,36 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.xiaoman.app.session.ChatItem
 
 @Composable
 internal fun ChatHeader(ready: Boolean, busy: Boolean, attention: Boolean) {
+    val tokens = LocalSkin.current.tokens
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(38.dp)) {
+        Surface(shape = tokens.avatarShape, color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier
+                .size(38.dp)
+                .graphicsLayer {
+                    rotationX = tokens.tiltDegrees
+                    rotationY = -tokens.tiltDegrees / 2f
+                    cameraDistance = 12f * density
+                }) {
             Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp)) }
         }
         Column(Modifier.weight(1f).padding(start = 10.dp)) {
             Text("小满", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("你的手机小助手", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+        Surface(shape = tokens.chipShape, color = MaterialTheme.colorScheme.primaryContainer) {
             Text(when { attention -> "等你确认"; busy -> "处理中"; ready -> "已就绪"; else -> "待设置" },
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -57,8 +62,7 @@ internal fun ChatWelcome(onExample: (String) -> Unit) {
 
 @Composable
 private fun Example(icon: ImageVector, title: String, detail: String, prompt: String, onExample: (String) -> Unit) {
-    Surface(onClick = { onExample(prompt) }, shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+    SkinCard(onClick = { onExample(prompt) }) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(23.dp))
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
@@ -74,7 +78,7 @@ private fun Example(icon: ImageVector, title: String, detail: String, prompt: St
 internal fun TaskStatus(status: String, onStop: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp).semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+        SkinProgress(Modifier.size(14.dp))
         Text(status, Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         TextButton(onClick = onStop) { Text("停止", style = MaterialTheme.typography.labelMedium) }
     }
@@ -83,8 +87,7 @@ internal fun TaskStatus(status: String, onStop: () -> Unit) {
 @Composable
 internal fun ProcessCard(entries: List<ChatItem.Progress>) {
     var expanded by rememberSaveable(entries.first().id) { mutableStateOf(false) }
-    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+    SkinCard(style = LocalSkin.current.tokens.inset) {
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.ListAlt, null, modifier = Modifier.size(17.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -104,15 +107,13 @@ internal fun ProcessCard(entries: List<ChatItem.Progress>) {
 internal fun ChatMessage(item: ChatItem) {
     when (item) {
         is ChatItem.User -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(20.dp, 20.dp, 5.dp, 20.dp),
-                modifier = Modifier.fillMaxWidth(0.90f)) {
+            SkinBubble(user = true, modifier = Modifier.fillMaxWidth(0.90f)) {
                 Text(item.text, Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
         is ChatItem.Assistant -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("小满", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-            Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(5.dp, 20.dp, 20.dp, 20.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+            SkinBubble(user = false) {
                 Text(chatRichText(item.text), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -124,8 +125,10 @@ internal fun ChatMessage(item: ChatItem) {
 
 @Composable
 private fun NoticeCard(title: String, body: String, error: Boolean) {
-    Surface(color = if (error) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(18.dp)) {
+    SkinCard(
+        style = LocalSkin.current.tokens.notice,
+        fill = if (error) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
+    ) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall)
             Text(chatRichText(body), style = MaterialTheme.typography.bodyMedium)

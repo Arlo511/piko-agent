@@ -80,7 +80,7 @@ fun SkillsScreen(graph: AppGraph) {
                 Text(stringResource(R.string.skills_reload), modifier = Modifier.padding(start = 4.dp))
             }
         }
-        if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (state.loading) SkinLinearProgress()
         LazyColumn(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -89,7 +89,7 @@ fun SkillsScreen(graph: AppGraph) {
                 item { Text(stringResource(R.string.skills_empty, graph.skillsDir.path), style = MaterialTheme.typography.bodyMedium) }
             }
             items(state.skills, key = { it.name }) { skill ->
-                Card(Modifier.fillMaxWidth()) {
+                SkinCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(skill.name, style = MaterialTheme.typography.titleMedium)
                         Text(skill.description, style = MaterialTheme.typography.bodyMedium)
@@ -106,7 +106,10 @@ fun SkillsScreen(graph: AppGraph) {
                     Text(stringResource(R.string.skills_problems), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
                 }
                 items(state.problems) { p ->
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer), modifier = Modifier.fillMaxWidth()) {
+                    SkinCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        fill = MaterialTheme.colorScheme.errorContainer,
+                    ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(p.source + (p.line?.let { ":$it" } ?: ""), style = MaterialTheme.typography.labelMedium)
                             Text(p.message, style = MaterialTheme.typography.bodyMedium)

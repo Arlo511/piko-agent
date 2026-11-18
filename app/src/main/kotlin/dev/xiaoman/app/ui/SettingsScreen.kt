@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.xiaoman.agent.Persona
 import dev.xiaoman.app.AppGraph
 import dev.xiaoman.app.R
@@ -66,6 +67,7 @@ private data class PersonaForm(
 @Composable
 fun SettingsScreen(graph: AppGraph) {
     val store = graph.settings
+    val skin by store.skin.collectAsStateWithLifecycle()
     var form by remember { mutableStateOf(SettingsForm.of(store.current)) }
     var saved by remember { mutableStateOf(false) }
     val parsed = form.toSettings()
@@ -124,6 +126,9 @@ fun SettingsScreen(graph: AppGraph) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge)
+
+        SkinPicker(selected = skin, onSelect = store::saveSkin)
+        HorizontalDivider()
 
         PersonaSection(
             form = persona,
@@ -190,7 +195,7 @@ fun SettingsScreen(graph: AppGraph) {
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Button(enabled = parsed != null, onClick = {
+            SkinButton(enabled = parsed != null, onClick = {
                 parsed?.let {
                     store.save(it)
                     saved = true
