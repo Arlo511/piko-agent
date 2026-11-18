@@ -75,31 +75,55 @@ class AccessibilityDevice(
         val shot = captureScreenshot(service)
         val (pkg, nodes) = withContext(Dispatchers.Default) { readNodes(service, w, h) }
         val foreground = service.foreground.value
+        val packageName = pkg ?: foreground?.packageName
+        val keepSecure = shot.secure && (shot.reason?.let {
+            SecureScreenPolicy.keepSecure(it, nodes.size, packageName)
+        } ?: true)
+        if (shot.secure) {
+            Log.w(TAG, "secure observation: reason=${shot.reason} pkg=$packageName nodes=${nodes.size} kept=$keepSecure")
+        }
         return ScreenState(
             screenshotPng = shot.png,
             widthPx = w,
             heightPx = h,
-            packageName = pkg ?: foreground?.packageName,
+            packageName = packageName,
             activityName = foreground?.activityName?.takeIf { pkg == null || foreground.packageName == pkg },
             nodes = nodes,
-            secure = shot.secure,
+            secure = keepSecure,
         )
     }
 
-    private class Shot(val png: ByteArray?, val secure: Boolean)
+    private class Shot(val png: ByteArray?, val secure: Boolean, val reason: SecureReason? = null)
 
     private suspend fun captureScreenshot(service: XiaomanAccessibilityService): Shot {
+        val confirmation = SecureConfirmation(required = SECURE_CONFIRM_ATTEMPTS)
         repeat(SCREENSHOT_ATTEMPTS) {
-            // Android allows one takeScreenshot per second per service.
+            // Android allows one takeScreenshot per second per service. The extra secure retry
+            // delay is intentionally shorter; the interval wait still enforces the platform limit.
             val wait = lastScreenshotAt + SCREENSHOT_INTERVAL_MS - SystemClock.uptimeMillis()
             if (wait > 0) delay(wait)
             val result = takeScreenshot(service)
             lastScreenshotAt = SystemClock.uptimeMillis()
             when (result) {
-                is RawShot.Ok -> return withContext(Dispatchers.Default) { encode(result.bitmap) }
+                is RawShot.Ok -> {
+                    val shot = withContext(Dispatchers.Default) { encode(result.bitmap) }
+                    if (!shot.secure) {
+                        confirmation.onReadable()
+                        return shot
+                    }
+                    if (confirmation.onUnreadable()) {
+                        return Shot(null, secure = true, reason = shot.reason)
+                    }
+                    delay(SECURE_RETRY_DELAY_MS)
+                }
                 is RawShot.Failed -> when (result.code) {
                     AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT -> Unit // retry after the interval
-                    AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW -> return Shot(null, secure = true)
+                    AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW -> {
+                        if (confirmation.onUnreadable()) {
+                            return Shot(null, secure = true, reason = SecureReason.SECURE_WINDOW)
+                        }
+                        delay(SECURE_RETRY_DELAY_MS)
+                    }
                     else -> {
                         Log.w(TAG, "takeScreenshot failed: ${result.code}")
                         return Shot(null, secure = false)
@@ -154,7 +178,9 @@ class AccessibilityDevice(
                 val pixels = IntArray(scaled.width * scaled.height)
                 scaled.getPixels(pixels, 0, scaled.width, 0, 0, scaled.width, scaled.height)
                 // Android 11-13 return secure windows as black frames instead of failing.
-                if (ScreenshotScaling.looksAllBlack(pixels, scaled.width, scaled.height)) return Shot(null, secure = true)
+                if (ScreenshotScaling.looksAllBlack(pixels, scaled.width, scaled.height)) {
+                    return Shot(null, secure = true, reason = SecureReason.ALL_BLACK)
+                }
                 val out = ByteArrayOutputStream(256 * 1024)
                 scaled.compress(Bitmap.CompressFormat.PNG, 100, out)
                 return Shot(out.toByteArray(), secure = false)
@@ -387,6 +413,8 @@ class AccessibilityDevice(
         private const val TAG = "Xiaoman"
         private const val SCREENSHOT_INTERVAL_MS = 1050L
         private const val SCREENSHOT_ATTEMPTS = 3
+        private const val SECURE_CONFIRM_ATTEMPTS = 2
+        private const val SECURE_RETRY_DELAY_MS = 400L
         private const val TAP_MS = 60L
         private const val FOCUS_DELAY_MS = 400L
         private const val SUBMIT_DELAY_MS = 150L
