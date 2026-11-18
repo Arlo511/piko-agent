@@ -85,6 +85,31 @@ memory: [偏好/工作]
 未配置时没有技能；--local 会先尝试工作目录，再尝试 jar 目录及其上一级的 skills/examples、skills，
 使用第一个存在的目录。修改技能后重启 web-server 重新加载。
 
+## 领路人技能与学习台账
+
+内置的 `learning-guide` 是聊天工作流：用户想系统学一个新领域时，先诊断起点、给出 3–5 个阶段，
+每轮只讲一小节，并把进度写进固定笔记 `learning/index`。它的 frontmatter 写 `memory: [learning/index]`，
+台账每轮都会自动注入，所以隔天说「继续」也能接上。
+
+台账是一条 `type: learning` 的普通记忆笔记，每个活跃主题一行：
+
+~~~markdown
+---
+title: 学习台账
+type: learning
+permalink: learning/index
+---
+# 学习台账
+
+## Observations
+- [topic] 摄影｜阶段 2/5｜已讲 曝光三要素、构图基础｜掌握 光圈优先｜薄弱 白平衡｜下次 光线方向
+- [topic] 吉他｜阶段 1/4｜已讲 持琴与右手拨弦｜掌握 空弦练习｜薄弱 节拍稳定｜下次 C 大调和弦
+~~~
+
+字段固定为主题｜阶段 x/y｜已讲｜掌握｜薄弱｜下次；最多 5 个活跃主题，每个主题只留一行。
+更新时先 `memory_forget` 再整体写回，避免旧版本堆积。台账会占用上面说的 8000 字总预算，
+不要把大纲全文写进来，详细章节另存 `learning/<主题>` 笔记。
+
 ## flow.yaml
 
 固定步骤按顺序执行；`ai` 步骤把一个子目标交给自由操作循环。
