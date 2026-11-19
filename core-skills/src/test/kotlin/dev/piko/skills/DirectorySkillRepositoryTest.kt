@@ -42,8 +42,7 @@ class DirectorySkillRepositoryTest {
         assertEquals(emptyList(), result.problems)
         assertEquals(
             listOf(
-                "ai-news-brief", "daily-quiz", "health-alarms", "learning-guide", "meal-order", "open-settings-wifi", "set-alarm",
-                "takeout-reorder", "taobao-compare", "taxi-home", "today-plan", "train-ticket-order",
+                "ai-news-brief", "learning-guide", "taobao-compare", "taxi-home", "train-ticket-order",
             ),
             result.skills.map { it.name },
         )
