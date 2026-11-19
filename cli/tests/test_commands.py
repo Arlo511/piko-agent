@@ -15,7 +15,7 @@ from xiaoman_cli.main import build_parser, main, new_run_id  # noqa: E402
 
 FIXTURE = os.path.join(HERE, "fixtures", "skills", "ride-home")
 SKILLS = "/sdcard/Android/data/dev.piko.app/files/skills"
-RECEIVER = "dev.piko.app/dev.xiaoman.app.debug.DebugReceiver"
+RECEIVER = "dev.piko.app/dev.piko.app.debug.DebugReceiver"
 
 
 class Result:

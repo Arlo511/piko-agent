@@ -16,7 +16,7 @@
     <application>
         <!-- Must be exported so the system can bind it; only holders of BIND_ACCESSIBILITY_SERVICE (the system) can. -->
         <service
-            android:name="dev.xiaoman.hands.XiaomanAccessibilityService"
+            android:name="dev.piko.hands.XiaomanAccessibilityService"
             android:exported="true"
             android:label="@string/xiaoman_accessibility_label"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

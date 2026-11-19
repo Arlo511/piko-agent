@@ -5,7 +5,7 @@ plugins {
 }
 kotlin { jvmToolchain(17) }
 application {
-    mainClass.set("dev.xiaoman.web.MainKt")
+    mainClass.set("dev.piko.web.MainKt")
     applicationName = "web-server"
     applicationDefaultJvmArgs = listOf("-Dfile.encoding=UTF-8")
 }

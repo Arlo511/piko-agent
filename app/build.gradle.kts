@@ -33,7 +33,7 @@ val bundleSkills = tasks.register<BundleSkillsTask>("bundleSkillAssets") {
 }
 
 android {
-    namespace = "dev.xiaoman.app"
+    namespace = "dev.piko.app"
     compileSdk = 35
     defaultConfig {
         applicationId = "dev.piko.app"
