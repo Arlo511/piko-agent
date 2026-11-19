@@ -53,9 +53,9 @@ deeplinks:
 
 | 链接 | 作用 |
 |---|---|
-| `xiaoman://alarm/set?hour=15&minute=0&label=喝水` | 打开系统时钟的「新建闹钟」页，时间和标签已填好；仍需在页面上核对后点保存 |
+| `piko://alarm/set?hour=15&minute=0&label=喝水` | 打开系统时钟的「新建闹钟」页，时间和标签已填好；仍需在页面上核对后点保存 |
 
-hour 为 0–23，minute 为 0–59（缺省 0），label 可选。其他 `xiaoman://` 链接会被拒绝。示例见 `skills/examples/health-alarms`。
+hour 为 0–23，minute 为 0–59（缺省 0），label 可选。其他 `piko://` 链接会被拒绝。示例见 `skills/examples/health-alarms`。
 
 ## 聊天工作流（channel: chat）
 

@@ -160,7 +160,7 @@ python cli/xiaoman.py push skills/examples/技能名
 ```
 
 ```text
-请参考 skills/examples/set-alarm，新建技能 skills/examples/health-alarms，用 docs/skills.md 里的内置链接 xiaoman://alarm/set 打开预填好的新建闹钟页，不要拨滚轮。
+请参考 skills/examples/set-alarm，新建技能 skills/examples/health-alarms，用 docs/skills.md 里的内置链接 piko://alarm/set 打开预填好的新建闹钟页，不要拨滚轮。
 我说“设健康闹钟”时，按我记忆里的作息（比如上课、开会的时间段）挑空档，
 每个闹钟标签写清楚做什么（喝水、起来活动）。
 设之前把时间列给我确认；设完打开闹钟列表核对每一条都在，少了就告诉我。
