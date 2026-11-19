@@ -58,8 +58,15 @@ class SettingsStore(private val plain: SharedPreferences, internal val secret: S
         )
     }
 
-    private fun loadSkin(): SkinId =
-        SkinId.entries.firstOrNull { it.name == plain.getString(SKIN, null) } ?: SkinId.XIAOMAN
+    private fun loadSkin(): SkinId {
+        val raw = plain.getString(SKIN, null)
+        SkinId.entries.firstOrNull { it.name == raw }?.let { return it }
+        if (raw == "XIAOMAN") {
+            plain.edit(commit = true) { putString(SKIN, SkinId.PIKO.name) }
+            return SkinId.PIKO
+        }
+        return SkinId.PIKO
+    }
 
     private fun model(prefix: String) = ModelSettings(
         baseUrl = plain.getString(prefix + BASE_URL, null) ?: ModelSettings.DEFAULT_BASE_URL,

@@ -15,9 +15,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.piko.app.settings.SkinId
 
-@Preview(name = "小满", widthDp = 360, heightDp = 640, showBackground = true)
+@Preview(name = "小可", widthDp = 360, heightDp = 640, showBackground = true)
 @Composable
-private fun XiaomanSkinPreview() = SkinGallery(SkinId.XIAOMAN)
+private fun PikoSkinPreview() = SkinGallery(SkinId.PIKO)
 
 @Preview(name = "GitHub", widthDp = 360, heightDp = 640, showBackground = true)
 @Composable
@@ -41,7 +41,7 @@ private fun SkinGallery(id: SkinId) {
         Box(Modifier.fillMaxSize()) {
             SkinBackground(Modifier.matchParentSize())
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("小满 · 皮肤预览", style = MaterialTheme.typography.titleLarge)
+                Text("小可 · 皮肤预览", style = MaterialTheme.typography.titleLarge)
                 SkinCard {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("这是一个卡片", style = MaterialTheme.typography.bodyMedium)

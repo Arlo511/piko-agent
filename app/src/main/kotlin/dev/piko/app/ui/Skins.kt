@@ -28,7 +28,7 @@ object SkinCatalog {
     }
 
     fun of(id: SkinId, dark: Boolean): Skin = when (id) {
-        SkinId.XIAOMAN -> xiaoman(dark)
+        SkinId.PIKO -> piko(dark)
         SkinId.GITHUB -> github(dark)
         SkinId.IOS -> ios(dark)
         SkinId.DEPTH -> depth(dark)
@@ -38,10 +38,10 @@ object SkinCatalog {
     fun all(dark: Boolean): List<Skin> = SkinId.entries.map { of(it, dark) }
 
     // ---------------------------------------------------------------------------------------------
-    // 小满默认：与改造前的视觉保持一致
+    // 小可默认：与改造前的视觉保持一致
     // ---------------------------------------------------------------------------------------------
 
-    private fun xiaoman(dark: Boolean): Skin {
+    private fun piko(dark: Boolean): Skin {
         val colors = if (dark) darkColorScheme(
             primary = Color(0xFF8BD6B5), onPrimary = Color(0xFF0B2A20),
             primaryContainer = Color(0xFF204D3C), onPrimaryContainer = Color(0xFFC6EBD9),
@@ -70,7 +70,7 @@ object SkinCatalog {
             errorContainer = Color(0xFFF9DEDC), onErrorContainer = Color(0xFF410E0B),
         )
         return Skin(
-            id = SkinId.XIAOMAN,
+            id = SkinId.PIKO,
             dark = dark,
             colors = colors,
             typography = Typography(

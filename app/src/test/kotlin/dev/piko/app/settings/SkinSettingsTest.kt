@@ -18,8 +18,26 @@ class SkinSettingsTest {
         context.getSharedPreferences("$name-secret", Context.MODE_PRIVATE),
     )
 
-    @Test fun `skin defaults to xiaoman`() {
-        assertEquals(SkinId.XIAOMAN, store("skin-default").currentSkin)
+    @Test fun `skin defaults to piko`() {
+        assertEquals(SkinId.PIKO, store("skin-default").currentSkin)
+    }
+
+    @Test fun `legacy xiaoman value migrates to piko`() {
+        val name = "skin-legacy"
+        val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        prefs.edit().putString("ui.skin", "XIAOMAN").commit()
+
+        assertEquals(SkinId.PIKO, store(name).currentSkin)
+        assertEquals("PIKO", prefs.getString("ui.skin", null))
+    }
+
+    @Test fun `piko value is read as is`() {
+        val name = "skin-piko"
+        val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        prefs.edit().putString("ui.skin", "PIKO").commit()
+
+        assertEquals(SkinId.PIKO, store(name).currentSkin)
+        assertEquals("PIKO", prefs.getString("ui.skin", null))
     }
 
     @Test fun `saved skin survives a new store instance`() {
@@ -32,9 +50,11 @@ class SkinSettingsTest {
 
     @Test fun `unknown stored value falls back to default`() {
         val name = "skin-invalid"
-        context.getSharedPreferences(name, Context.MODE_PRIVATE)
-            .edit().putString("ui.skin", "NOT_A_SKIN").commit()
-        assertEquals(SkinId.XIAOMAN, store(name).currentSkin)
+        val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        prefs.edit().putString("ui.skin", "NOT_A_SKIN").commit()
+
+        assertEquals(SkinId.PIKO, store(name).currentSkin)
+        assertEquals("NOT_A_SKIN", prefs.getString("ui.skin", null))
     }
 
     @Test fun `saving model settings does not reset the skin`() {

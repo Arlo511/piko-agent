@@ -47,7 +47,7 @@ class SkinCatalogTest {
     }
 
     @Test fun `default skin matches the original palette`() {
-        val light = SkinCatalog.of(SkinId.XIAOMAN, dark = false)
+        val light = SkinCatalog.of(SkinId.PIKO, dark = false)
         assertEquals(Color(0xFF1E6B52), light.colors.primary)
         assertEquals(Color(0xFFF7F9F6), light.colors.background)
         assertNull(light.tokens.card.shadow)
