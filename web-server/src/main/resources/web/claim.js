@@ -7,7 +7,7 @@
  * Errors: {ok:false, code, error}. The token is shown once; this tab keeps it in sessionStorage until closed.
  */
 
-/** Merges a claimed token into the web app's saved model settings (localStorage xiaoman.model), keeping own-key fields. */
+/** Merges a claimed token into the web app's saved model settings (localStorage piko.model), keeping own-key fields. */
 function withClassToken(saved, token) {
   const v = saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
   return {...v, mode: 'class', classToken: token};
@@ -18,11 +18,33 @@ function amountText(n) {
   return n >= 10000 && n % 10000 === 0 ? (n / 10000) + ' 万' : String(n);
 }
 
+/**
+ * One-time migration of pre-Piko localStorage keys (xiaoman.* -> piko.*).
+ * New keys win; old keys are removed after copying.
+ */
+function migrateLegacyStorage(storage) {
+  const OLD = 'xiaoman.';
+  const NEW = 'piko.';
+  try {
+    const keys = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key && key.startsWith(OLD)) keys.push(key);
+    }
+    for (const oldKey of keys) {
+      const newKey = NEW + oldKey.slice(OLD.length);
+      if (storage.getItem(newKey) === null) storage.setItem(newKey, storage.getItem(oldKey));
+      storage.removeItem(oldKey);
+    }
+  } catch (_) { /* storage unavailable */ }
+}
+
 if (typeof document !== 'undefined') {
   (() => {
+    migrateLegacyStorage(localStorage);
     const $ = id => document.getElementById(id);
     const steps = ['loading', 'closed', 'name', 'phrase', 'done'];
-    const KEY = 'xiaoman.claim';
+    const KEY = 'piko.claim';
     let info = {};
     let challenge = null;
     let timer = null;
@@ -128,8 +150,8 @@ if (typeof document !== 'undefined') {
       const token = $('token').textContent;
       try {
         let saved = null;
-        try { saved = JSON.parse(localStorage.getItem('xiaoman.model') || 'null'); } catch (_) { saved = null; }
-        localStorage.setItem('xiaoman.model', JSON.stringify(withClassToken(saved, token)));
+        try { saved = JSON.parse(localStorage.getItem('piko.model') || 'null'); } catch (_) { saved = null; }
+        localStorage.setItem('piko.model', JSON.stringify(withClassToken(saved, token)));
       } catch (_) { notice('浏览器不允许保存设置（可能是无痕模式）。请复制令牌，到网页版设置里手动填写。'); return; }
       location.href = '/#claimed';
     });

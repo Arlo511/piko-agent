@@ -416,7 +416,7 @@ class ClassGatewayTest {
     private fun webPost(s: WebServer, path: String, sid: String?, body: String): String {
         val c = URL("http://127.0.0.1:${s.port}$path").openConnection() as HttpURLConnection
         c.connectTimeout = 3000; c.readTimeout = 10_000; c.requestMethod = "POST"; c.doOutput = true
-        sid?.let { c.setRequestProperty("X-Xiaoman-Session", it) }
+        sid?.let { c.setRequestProperty("X-Piko-Session", it) }
         c.outputStream.use { it.write(body.toByteArray()) }
         return try { c.inputStream.bufferedReader().use { it.readText() } } finally { c.disconnect() }
     }

@@ -97,3 +97,23 @@ test('token amounts read as 万 when round', () => {
   assert.equal(claim.amountText(12345), '12345');
   assert.equal(claim.amountText(undefined), '-');
 });
+
+test('legacy xiaoman storage keys migrate to piko and are removed', () => {
+  const map = new Map([
+    ['xiaoman.model', '{"mode":"own"}'],
+    ['xiaoman.memory', '[]'],
+    ['piko.model', '{"mode":"class"}'],
+  ]);
+  const storage = {
+    get length() { return map.size; },
+    key(i) { return Array.from(map.keys())[i] ?? null; },
+    getItem(k) { return map.has(k) ? map.get(k) : null; },
+    setItem(k, v) { map.set(k, v); },
+    removeItem(k) { map.delete(k); },
+  };
+  app.migrateLegacyStorage(storage);
+  assert.equal(map.get('piko.model'), '{"mode":"class"}', 'existing new key wins');
+  assert.equal(map.get('piko.memory'), '[]', 'old key is copied');
+  assert.equal(map.has('xiaoman.model'), false, 'old key is removed');
+  assert.equal(map.has('xiaoman.memory'), false, 'old key is removed');
+});

@@ -124,7 +124,7 @@ class WebServer(
     }
     private fun authorized(x: HttpExchange): Boolean {
         val code = options.accessCode?.takeIf { it.isNotEmpty() } ?: return true
-        return MessageDigest.isEqual(code.toByteArray(), x.requestHeaders.getFirst("X-Xiaoman-Access").orEmpty().toByteArray())
+        return MessageDigest.isEqual(code.toByteArray(), x.requestHeaders.getFirst("X-Piko-Access").orEmpty().toByteArray())
     }
     /** Behind Caddy (a loopback peer) the client is the last X-Forwarded-For entry, which Caddy sets itself. */
     private fun clientIp(x: HttpExchange): String {
@@ -156,7 +156,7 @@ class WebServer(
             })
             "/api/session" -> { readLimited(x); json(x, 200, buildJsonObject { put("sessionId", newSession().id) }) }
             else -> {
-                val s = session(x.requestHeaders.getFirst("X-Xiaoman-Session").orEmpty()) ?: throw Problem(404, "会话已过期")
+                val s = session(x.requestHeaders.getFirst("X-Piko-Session").orEmpty()) ?: throw Problem(404, "会话已过期")
                 val body = body(x)
                 when (path) {
                     "/api/answer" -> {

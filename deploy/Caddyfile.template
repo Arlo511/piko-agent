@@ -38,8 +38,8 @@ __SITE__ {
 	# 	format filter {
 	# 		wrap console
 	# 		fields {
-	# 			request>headers>X-Xiaoman-Access delete
-	# 			request>headers>X-Xiaoman-Session delete
+	# 			request>headers>X-Piko-Access delete
+	# 			request>headers>X-Piko-Session delete
 	# 		}
 	# 	}
 	# }

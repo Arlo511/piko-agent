@@ -2,13 +2,13 @@
 /*
  * Xiaoman web API (same origin; no external dependencies):
  * GET /api/info {name,version,accessCodeRequired,classTokens}; GET /api/catalog {servers}.
- * POST /api/session {sessionId}; X-Xiaoman-Session in subsequent requests.
- * All /api/* use X-Xiaoman-Access when configured; 401 asks for a new code.
+ * POST /api/session {sessionId}; X-Piko-Session in subsequent requests.
+ * All /api/* use X-Piko-Access when configured; 401 asks for a new code.
  * 404 {error:"会话已过期"} creates a session and retries the request once.
  * POST /api/chat {message,model:{baseUrl,model,apiKey} | model:{classToken},mcp:{enabled,keys,custom},memory:{notes},now}.
  *   classToken (only when /api/info classTokens is true): the server calls the instructor's model with its own key,
- *   metered per token; the token is kept only in this browser (xiaoman.model).
- *   memory.notes = [{permalink,markdown,updatedAt}] from localStorage (xiaoman.memory); the server keeps
+ *   metered per token; the token is kept only in this browser (piko.model).
+ *   memory.notes = [{permalink,markdown,updatedAt}] from localStorage (piko.memory); the server keeps
  *   them only for this turn and never writes them to disk.
  * POST SSE data JSON types: reply{text}, tool{tool,ok,summary},
  * memory{action:"saved",permalink,title,markdown,updatedAt} | memory{action:"deleted",permalink},
@@ -16,7 +16,7 @@
  * reminder{text,at,ics}, warning{message}, error{message}, done. 409 = busy.
  * POST /api/answer {id,approved} or {id,text} -> {ok}.
  * POST /api/mcp/test {mcp} -> {servers:[{name,title,connected,toolCount,error}],warnings}.
- * Errors: {error}. Storage keys begin xiaoman.; history is capped at 200 rows.
+ * Errors: {error}. Storage keys begin piko.; history is capped at 200 rows.
  * parseSseChunk accepts an unconsumed string (including partial lines) and returns
  * complete JSON events plus rest. Call again with rest + the next decoded chunk.
  * linkify returns [{text, href?}]; render with textContent/createElement only.
@@ -149,11 +149,33 @@ function linkify(value) {
   return parts;
 }
 
+/**
+ * One-time migration of pre-Piko localStorage keys (xiaoman.* -> piko.*).
+ * New keys win; old keys are removed after copying.
+ */
+function migrateLegacyStorage(storage) {
+  const OLD = 'xiaoman.';
+  const NEW = 'piko.';
+  try {
+    const keys = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key && key.startsWith(OLD)) keys.push(key);
+    }
+    for (const oldKey of keys) {
+      const newKey = NEW + oldKey.slice(OLD.length);
+      if (storage.getItem(newKey) === null) storage.setItem(newKey, storage.getItem(oldKey));
+      storage.removeItem(oldKey);
+    }
+  } catch (_) { /* storage unavailable */ }
+}
+
 if (typeof document !== 'undefined') {
   (() => {
+    migrateLegacyStorage(localStorage);
     const $ = id => document.getElementById(id);
     const DEFAULT_URL = 'https://ark.cn-beijing.volces.com/api/v3';
-    const prefix = 'xiaoman.';
+    const prefix = 'piko.';
     const knownTypes = new Set(['user', 'reply', 'tool', 'memory', 'approval', 'question', 'reminder', 'warning', 'error']);
     function read(key, fallback, session = false) {
       try {
@@ -336,8 +358,8 @@ if (typeof document !== 'undefined') {
       for (;;) {
         const requestSession = sessionId;
         const headers = {Accept: options.stream ? 'text/event-stream' : 'application/json'};
-        if (accessCode) headers['X-Xiaoman-Access'] = accessCode;
-        if (requestSession) headers['X-Xiaoman-Session'] = requestSession;
+        if (accessCode) headers['X-Piko-Access'] = accessCode;
+        if (requestSession) headers['X-Piko-Session'] = requestSession;
         if (options.body !== undefined) headers['Content-Type'] = 'application/json';
         const response = await fetch(path, {method: options.method || 'GET', headers, body: options.body === undefined ? undefined : JSON.stringify(options.body), credentials: 'same-origin', cache: 'no-store'});
         if (response.status === 401) {
@@ -746,4 +768,4 @@ if (typeof document !== 'undefined') {
   })();
 }
 
-if (typeof module !== 'undefined') module.exports = { parseSseChunk, linkify, reminderTime, cleanNotes, applyMemoryEvent, memoryPayload, noteLines, cleanModel, modelReady, modelRequest };
+if (typeof module !== 'undefined') module.exports = { parseSseChunk, linkify, reminderTime, cleanNotes, applyMemoryEvent, memoryPayload, noteLines, cleanModel, modelReady, modelRequest, migrateLegacyStorage };

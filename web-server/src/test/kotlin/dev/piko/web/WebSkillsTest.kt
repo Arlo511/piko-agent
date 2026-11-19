@@ -25,7 +25,7 @@ class WebSkillsTest {
         c.connectTimeout = 3000; c.readTimeout = 5000
         c.requestMethod = "POST"; c.doOutput = true
         c.setRequestProperty("Content-Type", "application/json")
-        session?.let { c.setRequestProperty("X-Xiaoman-Session", it) }
+        session?.let { c.setRequestProperty("X-Piko-Session", it) }
         return try {
             c.outputStream.use { it.write(body.toByteArray()) }
             assertEquals(200, c.responseCode)

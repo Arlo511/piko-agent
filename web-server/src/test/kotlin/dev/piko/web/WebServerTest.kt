@@ -25,8 +25,8 @@ class WebServerTest {
         body: String? = null): HttpURLConnection {
         val c = URL("http://127.0.0.1:${server.port}$path").openConnection() as HttpURLConnection
         c.connectTimeout = 3000; c.readTimeout = 5000
-        session?.let { c.setRequestProperty("X-Xiaoman-Session", it) }
-        code?.let { c.setRequestProperty("X-Xiaoman-Access", it) }
+        session?.let { c.setRequestProperty("X-Piko-Session", it) }
+        code?.let { c.setRequestProperty("X-Piko-Access", it) }
         if (body != null) {
             c.requestMethod = "POST"; c.doOutput = true; c.setRequestProperty("Content-Type", "application/json")
             c.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
