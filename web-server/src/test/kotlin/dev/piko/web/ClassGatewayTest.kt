@@ -60,7 +60,7 @@ class ClassGatewayTest {
                         put("id", "c1"); put("object", "chat.completion"); put("model", model)
                         put("choices", JsonArray(listOf(buildJsonObject {
                             put("index", 0); put("finish_reason", "stop")
-                            put("message", buildJsonObject { put("role", "assistant"); put("content", "你好，我是小满") })
+                            put("message", buildJsonObject { put("role", "assistant"); put("content", "你好，我是小可") })
                         })))
                         if (usage) put("usage", buildJsonObject { put("prompt_tokens", 100); put("completion_tokens", 20); put("total_tokens", 120) })
                     }.toString())
@@ -85,7 +85,7 @@ class ClassGatewayTest {
         assertEquals(0, ClassTokenAdmin.run(args.toList() + listOf("--file", file.toString()), PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), env = emptyMap()))
 
     private fun config(up: FakeUpstream, file: Path, rpm: Int = 30, perToken: Int = 2, global: Int = 32, bodyBytes: Int = 8 * 1024 * 1024) = ClassConfig(
-        upstreamKey, linkedMapOf("xiaoman-class" to "doubao-real-id", "broken" to "broken-model", "deny" to "deny-model"), up.url, file,
+        upstreamKey, linkedMapOf("piko-class" to "doubao-real-id", "broken" to "broken-model", "deny" to "deny-model"), up.url, file,
         perTokenConcurrency = perToken, perTokenPerMinute = rpm, maxConcurrent = global, maxBodyBytes = bodyBytes, flushMillis = 60_000, reloadMillis = 0)
     private fun server(cfg: ClassConfig?, logs: MutableList<String>) =
         WebServer(WebServer.Options(port = 0, allowPrivateMcp = true, heartbeatMillis = 50, classConfig = cfg), logger = logs::add).start()
@@ -105,7 +105,7 @@ class ClassGatewayTest {
             return Reply(code, (if (code >= 400) c.errorStream else c.inputStream)?.bufferedReader()?.use { it.readText() }.orEmpty(), c.headerFields)
         } finally { c.disconnect() }
     }
-    private fun chatBody(model: String = "xiaoman-class", stream: Boolean = false, image: Boolean = false, includeUsage: Boolean = false) = buildJsonObject {
+    private fun chatBody(model: String = "piko-class", stream: Boolean = false, image: Boolean = false, includeUsage: Boolean = false) = buildJsonObject {
         put("model", model)
         if (stream) put("stream", true)
         if (includeUsage) put("stream_options", buildJsonObject { put("include_usage", true) })
@@ -127,7 +127,7 @@ class ClassGatewayTest {
             server(config(up, st.file), logs).use { s ->
                 val r = call(s, "/v1/chat/completions", st.tokens[0], chatBody())
                 assertEquals(200, r.code, r.text)
-                assertEquals("你好，我是小满", r.json.arr("choices")[0].jsonObject.obj("message").str("content"))
+                assertEquals("你好，我是小可", r.json.arr("choices")[0].jsonObject.obj("message").str("content"))
                 val sent = up.seen.single()
                 assertEquals("Bearer $upstreamKey", sent.auth)
                 assertEquals("doubao-real-id", sent.body.str("model"), "alias is replaced by the real model ID")
@@ -180,7 +180,7 @@ class ClassGatewayTest {
                 val parts = up.seen.single().body.arr("messages")[0].jsonObject.arr("content")
                 assertEquals("image_url", parts[1].jsonObject.str("type"))
                 assertTrue(parts[1].jsonObject.obj("image_url").str("url").startsWith("data:image/png;base64,"))
-                val huge = """{"model":"xiaoman-class","messages":[{"role":"user","content":"${"a".repeat(1024 * 1024 + 10)}"}]}"""
+                val huge = """{"model":"piko-class","messages":[{"role":"user","content":"${"a".repeat(1024 * 1024 + 10)}"}]}"""
                 val big = call(s, "/v1/chat/completions", st.tokens[0], huge)
                 assertEquals(413, big.code); assertEquals("request_too_large", big.errorCode)
                 assertEquals(1, up.seen.size)
@@ -222,7 +222,7 @@ class ClassGatewayTest {
             server(config(up, st.file), mutableListOf()).use { s ->
                 val models = call(s, "/v1/models", st.tokens[0])
                 assertEquals(200, models.code)
-                assertEquals(listOf("xiaoman-class", "broken", "deny"), models.json.arr("data").map { it.jsonObject.str("id") })
+                assertEquals(listOf("piko-class", "broken", "deny"), models.json.arr("data").map { it.jsonObject.str("id") })
                 assertFalse("doubao-real-id" in models.text, "real IDs stay on the server")
                 val denied = call(s, "/v1/chat/completions", st.tokens[0], chatBody(model = "doubao-real-id"))
                 assertEquals(400, denied.code); assertEquals("model_not_allowed", denied.errorCode)
@@ -296,14 +296,14 @@ class ClassGatewayTest {
     }
 
     @Test fun whitelistParsingAndEnvConfig() {
-        assertEquals(mapOf("xiaoman-class" to "ep-123", "doubao-seed-1-6-250615" to "doubao-seed-1-6-250615"),
-            ClassConfig.parseModels("xiaoman-class=ep-123, doubao-seed-1-6-250615"))
+        assertEquals(mapOf("piko-class" to "ep-123", "doubao-seed-1-6-250615" to "doubao-seed-1-6-250615"),
+            ClassConfig.parseModels("piko-class=ep-123, doubao-seed-1-6-250615"))
         assertFailsWith<IllegalArgumentException> { ClassConfig.parseModels("a=b\"c") }
         assertNull(ClassConfig.fromEnv(emptyMap()).first, "no key: off")
-        assertNull(ClassConfig.fromEnv(mapOf("XIAOMAN_CLASS_UPSTREAM_KEY" to "k-123456")).first, "no whitelist: off")
+        assertNull(ClassConfig.fromEnv(mapOf("PIKO_CLASS_UPSTREAM_KEY" to "k-123456")).first, "no whitelist: off")
         val keyFile = Files.createTempFile("key", ".txt").also { Files.writeString(it, "file-key-123\n") }
-        val cfg = ClassConfig.fromEnv(mapOf("XIAOMAN_CLASS_UPSTREAM_KEY_FILE" to keyFile.toString(), "XIAOMAN_CLASS_MODELS" to "xiaoman-class=ep-1",
-            "XIAOMAN_CLASS_TOKEN_RPM" to "12")).first!!
+        val cfg = ClassConfig.fromEnv(mapOf("PIKO_CLASS_UPSTREAM_KEY_FILE" to keyFile.toString(), "PIKO_CLASS_MODELS" to "piko-class=ep-1",
+            "PIKO_CLASS_TOKEN_RPM" to "12")).first!!
         assertEquals("file-key-123", cfg.upstreamKey); assertEquals(12, cfg.perTokenPerMinute)
         assertEquals(ClassConfig.DEFAULT_UPSTREAM, cfg.upstreamUrl)
         assertFalse("file-key-123" in cfg.toString())
@@ -343,7 +343,7 @@ class ClassGatewayTest {
                 }
                 val ok = turn(st.tokens[0])
                 assertEquals(listOf("reply", "done"), ok.map { it.str("type") }, ok.toString())
-                assertEquals("你好，我是小满", ok[0].str("text"))
+                assertEquals("你好，我是小可", ok[0].str("text"))
                 val sent = up.seen.single()
                 assertEquals("Bearer $upstreamKey", sent.auth); assertEquals("doubao-real-id", sent.body.str("model"))
                 // Usage is shared with /v1: 120 from the web turn + 120 here exceeds the daily 200.
@@ -384,11 +384,11 @@ class ClassGatewayTest {
                 assertNull(up.seen.last().body["thinking"], "keep mode forwards the request unchanged")
             }
         }
-        val env = mapOf("XIAOMAN_CLASS_UPSTREAM_KEY" to "k", "XIAOMAN_CLASS_MODELS" to "a=b")
+        val env = mapOf("PIKO_CLASS_UPSTREAM_KEY" to "k", "PIKO_CLASS_MODELS" to "a=b")
         assertEquals("disabled", ClassConfig.fromEnv(env).first!!.thinking)
-        assertNull(ClassConfig.fromEnv(env + ("XIAOMAN_CLASS_THINKING" to "keep")).first!!.thinking)
-        assertEquals("auto", ClassConfig.fromEnv(env + ("XIAOMAN_CLASS_THINKING" to "auto")).first!!.thinking)
-        assertFailsWith<IllegalArgumentException> { ClassConfig.fromEnv(env + ("XIAOMAN_CLASS_THINKING" to "off")) }
+        assertNull(ClassConfig.fromEnv(env + ("PIKO_CLASS_THINKING" to "keep")).first!!.thinking)
+        assertEquals("auto", ClassConfig.fromEnv(env + ("PIKO_CLASS_THINKING" to "auto")).first!!.thinking)
+        assertFailsWith<IllegalArgumentException> { ClassConfig.fromEnv(env + ("PIKO_CLASS_THINKING" to "off")) }
     }
 
     @Test fun androidAppClientWorksWithBaseUrlV1() {
@@ -396,13 +396,13 @@ class ClassGatewayTest {
             val st = setup(1)
             server(config(up, st.file), mutableListOf()).use { s ->
                 // Exactly what the app builds from Settings: Base URL https://<server>/v1, Key = token, model = whitelist name.
-                val app = dev.piko.llm.OpenAiCompatibleClient(ModelConfig(ModelRole.OPERATOR, "http://127.0.0.1:${s.port}/v1/", "xiaoman-class", st.tokens[0]),
+                val app = dev.piko.llm.OpenAiCompatibleClient(ModelConfig(ModelRole.OPERATOR, "http://127.0.0.1:${s.port}/v1/", "piko-class", st.tokens[0]),
                     maxRetries = 0)
                 val reply = kotlinx.coroutines.runBlocking {
                     app.complete(ChatRequest(listOf(ChatMessage(ChatRole.USER, listOf(ContentPart.Text("点哪里"), ContentPart.ImagePng(ByteArray(2048) { 7 })))),
                         jsonMode = true))
                 }
-                assertEquals("你好，我是小满", reply.text); assertEquals(Usage(100, 20), reply.usage)
+                assertEquals("你好，我是小可", reply.text); assertEquals(Usage(100, 20), reply.usage)
                 val sent = up.seen.single().body
                 assertEquals("doubao-real-id", sent.str("model")); assertEquals("json_object", sent.obj("response_format").str("type"))
                 assertEquals("image_url", sent.arr("messages")[0].jsonObject.arr("content")[1].jsonObject.str("type"))

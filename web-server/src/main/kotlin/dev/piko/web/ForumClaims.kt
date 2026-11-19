@@ -55,23 +55,23 @@ data class ClaimConfig(
     companion object {
         const val DEFAULT_FORUM = "https://forum.trae.cn"
 
-        /** Reads XIAOMAN_CLAIM_*; null (off) with the reason when no topic is configured. Invalid values throw. */
+        /** Reads PIKO_CLAIM_*; null (off) with the reason when no topic is configured. Invalid values throw. */
         fun fromEnv(env: Map<String, String>, zone: ZoneId, now: Long = System.currentTimeMillis()): Pair<ClaimConfig?, String> {
             fun v(name: String) = env[name]?.trim()?.takeIf { it.isNotEmpty() }
             fun long(name: String, default: Long) = v(name)?.replace("_", "")?.replace(",", "")
                 ?.let { it.toLongOrNull()?.takeIf { n -> n > 0 } ?: throw IllegalArgumentException("$name 需要正整数") } ?: default
-            val topic = v("XIAOMAN_CLAIM_TOPIC_ID") ?: return null to "未配置领取帖（XIAOMAN_CLAIM_TOPIC_ID）"
-            val topicId = parseTopic(topic) ?: throw IllegalArgumentException("XIAOMAN_CLAIM_TOPIC_ID 需要帖子编号或帖子链接")
-            val expires = parseTime(v("XIAOMAN_CLAIM_EXPIRES") ?: throw IllegalArgumentException("开启自助领取需要 XIAOMAN_CLAIM_EXPIRES（如 2026-11-12 21:00）"), zone)
-                ?: throw IllegalArgumentException("XIAOMAN_CLAIM_EXPIRES 格式：2026-11-12 21:00")
-            val total = long("XIAOMAN_CLAIM_TOTAL_TOKENS", 1_000_000)
-            val forum = (v("XIAOMAN_CLAIM_FORUM") ?: DEFAULT_FORUM).trimEnd('/')
-            require(forum.startsWith("https://") || forum.startsWith("http://")) { "XIAOMAN_CLAIM_FORUM 无效" }
-            val before = v("XIAOMAN_CLAIM_MIN_CREATED_BEFORE")?.let {
-                parseTime(it, zone) ?: throw IllegalArgumentException("XIAOMAN_CLAIM_MIN_CREATED_BEFORE 格式：2026-11-01 或 2026-11-01 12:00")
+            val topic = v("PIKO_CLAIM_TOPIC_ID") ?: return null to "未配置领取帖（PIKO_CLAIM_TOPIC_ID）"
+            val topicId = parseTopic(topic) ?: throw IllegalArgumentException("PIKO_CLAIM_TOPIC_ID 需要帖子编号或帖子链接")
+            val expires = parseTime(v("PIKO_CLAIM_EXPIRES") ?: throw IllegalArgumentException("开启自助领取需要 PIKO_CLAIM_EXPIRES（如 2026-11-12 21:00）"), zone)
+                ?: throw IllegalArgumentException("PIKO_CLAIM_EXPIRES 格式：2026-11-12 21:00")
+            val total = long("PIKO_CLAIM_TOTAL_TOKENS", 1_000_000)
+            val forum = (v("PIKO_CLAIM_FORUM") ?: DEFAULT_FORUM).trimEnd('/')
+            require(forum.startsWith("https://") || forum.startsWith("http://")) { "PIKO_CLAIM_FORUM 无效" }
+            val before = v("PIKO_CLAIM_MIN_CREATED_BEFORE")?.let {
+                parseTime(it, zone) ?: throw IllegalArgumentException("PIKO_CLAIM_MIN_CREATED_BEFORE 格式：2026-11-01 或 2026-11-01 12:00")
             }
-            val trust = v("XIAOMAN_CLAIM_MIN_TRUST")?.let { it.toIntOrNull()?.takeIf { n -> n in 0..4 } ?: throw IllegalArgumentException("XIAOMAN_CLAIM_MIN_TRUST 需要 0-4") } ?: 0
-            val config = ClaimConfig(topicId, expires, long("XIAOMAN_CLAIM_MAX", 50).toInt(), total, long("XIAOMAN_CLAIM_DAILY_TOKENS", total),
+            val trust = v("PIKO_CLAIM_MIN_TRUST")?.let { it.toIntOrNull()?.takeIf { n -> n in 0..4 } ?: throw IllegalArgumentException("PIKO_CLAIM_MIN_TRUST 需要 0-4") } ?: 0
+            val config = ClaimConfig(topicId, expires, long("PIKO_CLAIM_MAX", 50).toInt(), total, long("PIKO_CLAIM_DAILY_TOKENS", total),
                 forum, before, trust)
             return config to if (now >= expires) "已过期" else "已开启"
         }
@@ -148,7 +148,7 @@ class ForumClient(baseUrl: String, http: OkHttpClient, timeoutSeconds: Long = 10
 
     /** Parsed JSON, null for 404; anything else unexpected is [ForumUnavailable]. */
     private fun get(url: HttpUrl): JsonObject? {
-        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", "xiaoman-claim/1.0").build()
+        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", "piko-claim/1.0").build()
         try {
             http.newCall(request).execute().use { r ->
                 if (r.code == 404) return null
@@ -211,7 +211,7 @@ class ClaimService(
     private val clock: () -> Long = System::currentTimeMillis,
     private val logger: (String) -> Unit = ::println,
     /** Model name students type in the Android app (the class whitelist name). */
-    private val model: String = "xiaoman-class",
+    private val model: String = "piko-class",
 ) {
     class Reply(val status: Int, val body: JsonObject, val retryAfter: Long? = null)
     private class Challenge(val id: String, val userId: Long, val username: String, val phrase: String, val createdAt: Long, val expiresAt: Long)
@@ -390,7 +390,7 @@ class ClaimService(
     private fun display(ms: Long) = DISPLAY.format(Instant.ofEpochMilli(ms).atZone(zone))
 
     companion object {
-        const val PHRASE = "领取小满令牌"
+        const val PHRASE = "领取小可令牌"
         const val LABEL = "论坛:"
         private const val CODE = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
         private const val BATCH = 50

@@ -17,7 +17,7 @@ class MacReminders(
     private val out: PrintStream,
     private val clock: () -> Long = System::currentTimeMillis,
     private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor { r ->
-        Thread(r, "xiaoman-reminders").apply { isDaemon = true }
+        Thread(r, "piko-reminders").apply { isDaemon = true }
     },
     private val notify: (String) -> Unit = ::macNotification,
 ) : ReminderScheduler {
@@ -36,7 +36,7 @@ class MacReminders(
         /** Shows a notification on macOS; the text is passed as an argument, never spliced into a script. */
         fun macNotification(text: String) {
             if (!System.getProperty("os.name").orEmpty().contains("Mac") || !File(OSASCRIPT).canExecute()) return
-            ProcessBuilder(OSASCRIPT, "-e", "on run argv", "-e", "display notification (item 1 of argv) with title \"小满\"",
+            ProcessBuilder(OSASCRIPT, "-e", "on run argv", "-e", "display notification (item 1 of argv) with title \"小可\"",
                 "-e", "end run", text)
                 .redirectErrorStream(true)
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)

@@ -1,0 +1,39 @@
+# systemd unit for the 小可 web server. install.sh copies it to /etc/systemd/system/piko-web.service.
+# Settings (access code, timezone, JVM memory) live in /etc/piko-web/env, readable by root and the service only.
+[Unit]
+Description=小可网页版 (piko web-server)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=piko
+Group=piko
+EnvironmentFile=/etc/piko-web/env
+# HOME is only used by npx (12306) for its package cache.
+Environment=HOME=/var/lib/piko-web
+StateDirectory=piko-web
+WorkingDirectory=/var/lib/piko-web
+# Listens on localhost only; Caddy terminates HTTPS in front of it.
+# PIKO_WEB_ACCESS_CODE is read from the environment, so it never shows up in `ps`.
+ExecStart=/opt/piko-web/current/bin/web-server --host 127.0.0.1 --port ${PIKO_PORT} --timezone ${PIKO_TZ} --stdio-mcp ${PIKO_STDIO_MCP}
+Restart=on-failure
+RestartSec=3
+# Hardening: the server keeps everything in memory and needs no write access outside its state dir.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/var/lib/piko-web
+UMask=0077
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

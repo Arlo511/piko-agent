@@ -14,10 +14,10 @@ class RunnerConfigTest {
         File(home, "config.properties").writeText(
             "chat.model=doubao-chat\noperator.model=file-operator\nchat.apiKey=sk-in-file\n", Charsets.UTF_8)
         val env = mapOf(
-            "XIAOMAN_HOME" to home.path,
-            "XIAOMAN_OPERATOR_MODEL" to "doubao-vision",
+            "PIKO_HOME" to home.path,
+            "PIKO_OPERATOR_MODEL" to "doubao-vision",
             "ARK_API_KEY" to "ark-secret-123",
-            "XIAOMAN_WDA_URL" to "http://10.0.0.2:8100",
+            "PIKO_WDA_URL" to "http://10.0.0.2:8100",
         )
         val config = RunnerConfig.parse(listOf("task", "打开设置", "--skills", "/repo/skills/ios", "--skill", "open-settings-wifi",
             "--max-steps", "12", "--non-interactive"), env)
@@ -41,8 +41,8 @@ class RunnerConfigTest {
     }
 
     @Test fun explicitArgsWinAndSpecificKeysBeatSharedKey() {
-        val env = mapOf("XIAOMAN_HOME" to home.path, "XIAOMAN_WDA_URL" to "http://env:8100",
-            "ARK_API_KEY" to "shared", "XIAOMAN_CHAT_API_KEY" to "chat-only")
+        val env = mapOf("PIKO_HOME" to home.path, "PIKO_WDA_URL" to "http://env:8100",
+            "ARK_API_KEY" to "shared", "PIKO_CHAT_API_KEY" to "chat-only")
         val config = RunnerConfig.parse(listOf("check", "--wda", "http://arg:8100"), env)
         assertEquals("http://arg:8100", config.wdaUrl)
         assertEquals("chat-only", config.chat.apiKey)
@@ -50,21 +50,21 @@ class RunnerConfigTest {
     }
 
     @Test fun wdaBundleIdFollowsTheScript() {
-        val default = RunnerConfig.parse(listOf("check"), mapOf("XIAOMAN_HOME" to home.path))
-        assertEquals("com.xiaoman.WebDriverAgentRunner.xctrunner", IosPlatform.runnerBundleId(default.wdaBundleId))
-        val custom = RunnerConfig.parse(listOf("check"), mapOf("XIAOMAN_HOME" to home.path, "WDA_BUNDLE_ID" to "com.ryan.wda"))
+        val default = RunnerConfig.parse(listOf("check"), mapOf("PIKO_HOME" to home.path))
+        assertEquals("com.piko.WebDriverAgentRunner.xctrunner", IosPlatform.runnerBundleId(default.wdaBundleId))
+        val custom = RunnerConfig.parse(listOf("check"), mapOf("PIKO_HOME" to home.path, "WDA_BUNDLE_ID" to "com.ryan.wda"))
         assertEquals("com.ryan.wda.xctrunner", IosPlatform.runnerBundleId(custom.wdaBundleId))
     }
 
     @Test fun missingModelsExplainsWithoutKeys() {
-        val config = RunnerConfig.parse(listOf("chat", "--home", home.path), mapOf("XIAOMAN_CHAT_API_KEY" to "only-chat-key"))
+        val config = RunnerConfig.parse(listOf("chat", "--home", home.path), mapOf("PIKO_CHAT_API_KEY" to "only-chat-key"))
         val message = assertNotNull(config.missingModels())
-        assertTrue("chat.model" in message && "operator.model" in message && "XIAOMAN_OPERATOR_API_KEY" in message)
+        assertTrue("chat.model" in message && "operator.model" in message && "PIKO_OPERATOR_API_KEY" in message)
         assertFalse("only-chat-key" in message)
     }
 
     @Test fun rejectsBadUsage() {
-        val env = mapOf("XIAOMAN_HOME" to home.path)
+        val env = mapOf("PIKO_HOME" to home.path)
         assertFailsWith<UsageException> { RunnerConfig.parse(listOf("fly"), env) }
         assertFailsWith<UsageException> { RunnerConfig.parse(listOf("task"), env) }
         assertFailsWith<UsageException> { RunnerConfig.parse(listOf("dump"), env) }

@@ -12,33 +12,33 @@ class DebugCommandTest {
     @Test fun `run with all extras`() {
         assertEquals(
             DebugCommand.Run("打开设置", "open-settings-wifi", "r1"),
-            parse("dev.xiaoman.debug.RUN", "goal" to " 打开设置 ", "skill" to "open-settings-wifi", "run_id" to "r1"),
+            parse("dev.piko.debug.RUN", "goal" to " 打开设置 ", "skill" to "open-settings-wifi", "run_id" to "r1"),
         )
     }
 
     @Test fun `say carries trimmed text and needs some`() {
-        assertEquals(DebugCommand.Say("帮我排一下今天"), parse("dev.xiaoman.debug.SAY", "text" to " 帮我排一下今天 "))
-        assertNull(parse("dev.xiaoman.debug.SAY", "text" to "  "))
+        assertEquals(DebugCommand.Say("帮我排一下今天"), parse("dev.piko.debug.SAY", "text" to " 帮我排一下今天 "))
+        assertNull(parse("dev.piko.debug.SAY", "text" to "  "))
     }
 
     @Test fun `run id and skill are optional`() {
-        assertEquals(DebugCommand.Run("打开设置", null, "generated"), parse("dev.xiaoman.debug.RUN", "goal" to "打开设置", "skill" to " "))
+        assertEquals(DebugCommand.Run("打开设置", null, "generated"), parse("dev.piko.debug.RUN", "goal" to "打开设置", "skill" to " "))
     }
 
     @Test fun `missing goal is an invalid run that keeps the run id`() {
-        val cmd = assertIs<DebugCommand.InvalidRun>(parse("dev.xiaoman.debug.RUN", "run_id" to "r9"))
+        val cmd = assertIs<DebugCommand.InvalidRun>(parse("dev.piko.debug.RUN", "run_id" to "r9"))
         assertEquals("r9", cmd.runId)
     }
 
     @Test fun `unsafe run id is rejected`() {
-        val cmd = assertIs<DebugCommand.InvalidRun>(parse("dev.xiaoman.debug.RUN", "goal" to "x", "run_id" to "../etc"))
+        val cmd = assertIs<DebugCommand.InvalidRun>(parse("dev.piko.debug.RUN", "goal" to "x", "run_id" to "../etc"))
         assertEquals("generated", cmd.runId)
     }
 
     @Test fun `stop reload and unknown actions`() {
-        assertEquals(DebugCommand.Stop, parse("dev.xiaoman.debug.STOP"))
-        assertEquals(DebugCommand.ReloadSkills, parse("dev.xiaoman.debug.RELOAD_SKILLS"))
-        assertNull(parse("dev.xiaoman.debug.NOPE"))
+        assertEquals(DebugCommand.Stop, parse("dev.piko.debug.STOP"))
+        assertEquals(DebugCommand.ReloadSkills, parse("dev.piko.debug.RELOAD_SKILLS"))
+        assertNull(parse("dev.piko.debug.NOPE"))
         assertNull(parse(null))
     }
 }

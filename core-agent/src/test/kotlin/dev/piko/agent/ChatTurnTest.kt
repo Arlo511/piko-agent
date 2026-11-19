@@ -16,10 +16,10 @@ class ChatTurnTest {
     fun replyWithSkillIndexMemoryHitsAndHistory() = runTest {
         val h = Harness(skills = FakeSkills(skill("taxi-home", "打车回家")))
         h.memory.write(Note(title = "家", permalink = "places/家", observations = listOf(Observation("address", "北京市海淀区某某路 1 号"))))
-        h.chat.reply("你好，我是小满。").reply("你家在海淀。")
+        h.chat.reply("你好，我是小可。").reply("你家在海淀。")
 
         h.agent.handle("你好，某某路是我家吗", h.events, h.stop)
-        assertEquals(listOf("你好，我是小满。"), h.events.of<AgentEvent.Reply>().map { it.text })
+        assertEquals(listOf("你好，我是小可。"), h.events.of<AgentEvent.Reply>().map { it.text })
         val first = h.chat.requests[0]
         val system = first.messages[0].text
         assertTrue(system.startsWith("你是小可"))

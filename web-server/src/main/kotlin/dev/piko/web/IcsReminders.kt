@@ -20,8 +20,8 @@ class IcsReminders(private val channels: WebChannels, private val timezone: Zone
         fun calendar(text: String, atMillis: Long, nowMillis: Long): String {
             val summary = text.replace("\\", "\\\\").replace("\r\n", "\n").replace("\r", "\n")
                 .replace("\n", "\\n").replace(",", "\\,").replace(";", "\\;")
-            val lines = listOf("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Xiaoman//Web//ZH", "CALSCALE:GREGORIAN",
-                "BEGIN:VEVENT", "UID:${UUID.randomUUID()}@xiaoman", "DTSTAMP:${utc.format(Instant.ofEpochMilli(nowMillis))}",
+            val lines = listOf("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Piko//Web//ZH", "CALSCALE:GREGORIAN",
+                "BEGIN:VEVENT", "UID:${UUID.randomUUID()}@piko", "DTSTAMP:${utc.format(Instant.ofEpochMilli(nowMillis))}",
                 "DTSTART:${utc.format(Instant.ofEpochMilli(atMillis))}", "SUMMARY:$summary", "BEGIN:VALARM", "TRIGGER:PT0M",
                 "ACTION:DISPLAY", "DESCRIPTION:$summary", "END:VALARM", "END:VEVENT", "END:VCALENDAR")
             // Fold by UTF-8 octets without splitting a code point (RFC 5545).

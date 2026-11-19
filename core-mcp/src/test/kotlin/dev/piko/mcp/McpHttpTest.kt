@@ -46,7 +46,7 @@ class McpHttpTest {
             val requests = (1..5).map { assertNotNull(http.takeRequest(2, TimeUnit.SECONDS)) }
             val initialization = Json.parseToJsonElement(requests[0].body.readUtf8()).jsonObject
             assertEquals("2025-06-18", initialization["params"]?.jsonObject?.string("protocolVersion"))
-            assertEquals("xiaoman", initialization["params"]?.jsonObject?.get("clientInfo")?.jsonObject?.string("name"))
+            assertEquals("piko", initialization["params"]?.jsonObject?.get("clientInfo")?.jsonObject?.string("name"))
             assertNull(requests[0].getHeader("Mcp-Session-Id"))
             assertNull(requests[0].getHeader("MCP-Protocol-Version"))
             assertEquals("notifications/initialized", Json.parseToJsonElement(requests[1].body.readUtf8()).jsonObject.string("method"))

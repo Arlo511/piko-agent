@@ -5,7 +5,7 @@ usage() {
   cat <<'EOF'
 用法：bash scripts/ios/doctor.sh <check|--help>
 check 只读检查 macOS、Xcode、iOS SDK、已连接真机、Java 17 与 WDA /status。
-XIAOMAN_WDA_URL 默认 http://127.0.0.1:${WDA_PORT:-8100}；WDA_PORT 默认 8100。
+PIKO_WDA_URL 默认 http://127.0.0.1:${WDA_PORT:-8100}；WDA_PORT 默认 8100。
 本脚本不安装软件、不修改系统设置。无参数只显示本用法。
 EOF
 }
@@ -70,9 +70,9 @@ if command -v java >/dev/null 2>&1 && java_output="$(java -version 2>&1)"; then
   java_major="$(printf '%s\n' "$java_output" | sed -nE 's/.*version "([0-9]+).*/\1/p' | head -n 1)"
   if [[ "$java_major" == 17 ]]; then echo 'Java 17 可用。'; else warn '当前 Java 不是 17；请安装 JDK 17 并为 ios-runner 选择它。'; fi
 else warn 'Java 不可用，请安装 JDK 17。'; fi
-wda_url="${XIAOMAN_WDA_URL:-http://127.0.0.1:${WDA_PORT:-8100}}"
+wda_url="${PIKO_WDA_URL:-http://127.0.0.1:${WDA_PORT:-8100}}"
 echo '检查 WDA /status（连接超时 3 秒，总超时 5 秒）。'
 if command -v curl >/dev/null 2>&1 && curl --fail --silent --show-error --connect-timeout 3 --max-time 5 "${wda_url%/}/status"; then
   printf '\nWDA /status 可达。\n'
-else warn 'WDA /status 不可达，请检查 start、forward 或 XIAOMAN_WDA_URL。'; fi
+else warn 'WDA /status 不可达，请检查 start、forward 或 PIKO_WDA_URL。'; fi
 if (( issues == 0 )); then echo '检查完成，未发现上述问题；开发者模式和证书信任仍需在手机上确认。'; else echo "检查完成，有 $issues 项需处理。"; fi

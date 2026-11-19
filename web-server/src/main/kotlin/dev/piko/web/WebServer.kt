@@ -138,7 +138,7 @@ class WebServer(
         if (x.requestMethod != method) throw Problem(405, "请求方法不支持")
         when (path) {
             "/api/info" -> json(x, 200, buildJsonObject {
-                put("name", "Xiaoman"); put("version", "1.1"); put("accessCodeRequired", !options.accessCode.isNullOrEmpty())
+                put("name", "Piko"); put("version", "1.1"); put("accessCodeRequired", !options.accessCode.isNullOrEmpty())
                 put("stdioMcp", stdio.enabled); put("memory", "browser"); put("classTokens", gateway?.active == true)
                 put("claim", claims?.info() ?: buildJsonObject { put("state", "off") })
             })

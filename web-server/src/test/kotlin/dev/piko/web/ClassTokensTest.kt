@@ -52,11 +52,11 @@ class ClassTokensTest {
 
     @Test fun csvOutputCarriesWhatStudentsNeed() {
         val file = tempFile()
-        val run = admin(file, "generate", "2", "--csv", "--label", "A班", "--base-url", "https://x.example/v1", "--model", "xiaoman-class")
+        val run = admin(file, "generate", "2", "--csv", "--label", "A班", "--base-url", "https://x.example/v1", "--model", "piko-class")
         val lines = run.out.removePrefix("﻿").trim().lines()
         assertEquals("标签,令牌,过期时间,每日上限,总上限,Base URL,模型名", lines[0])
         assertEquals(3, lines.size)
-        assertTrue(lines[1].startsWith("A班 01,xm-")); assertTrue(lines[1].endsWith(",https://x.example/v1,xiaoman-class"))
+        assertTrue(lines[1].startsWith("A班 01,xm-")); assertTrue(lines[1].endsWith(",https://x.example/v1,piko-class"))
     }
 
     @Test fun revokeExpiryAndQuotaAreEnforced() {

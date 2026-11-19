@@ -62,30 +62,30 @@ data class ClassConfig(
             }
         private val SAFE = Regex("[A-Za-z0-9._:/-]{1,128}")
 
-        /** Reads XIAOMAN_CLASS_* variables. Returns null (feature off) with the reason when something required is missing. */
+        /** Reads PIKO_CLASS_* variables. Returns null (feature off) with the reason when something required is missing. */
         fun fromEnv(env: Map<String, String>, tokensFile: Path? = null): Pair<ClassConfig?, String> {
             fun v(name: String) = env[name]?.trim()?.takeIf { it.isNotEmpty() }
             fun int(name: String, default: Int) = v(name)?.let { it.toIntOrNull()?.takeIf { n -> n > 0 } ?: error("$name 需要正整数") } ?: default
-            val key = v("XIAOMAN_CLASS_UPSTREAM_KEY") ?: v("XIAOMAN_CLASS_UPSTREAM_KEY_FILE")?.let { file ->
+            val key = v("PIKO_CLASS_UPSTREAM_KEY") ?: v("PIKO_CLASS_UPSTREAM_KEY_FILE")?.let { file ->
                 runCatching { Files.readString(Path.of(file)).trim() }.getOrElse { return null to "读不到上游 Key 文件 $file" }
             }
-            if (key.isNullOrBlank()) return null to "未配置上游 Key（XIAOMAN_CLASS_UPSTREAM_KEY_FILE）"
-            val models = parseModels(v("XIAOMAN_CLASS_MODELS") ?: return null to "未配置模型白名单（XIAOMAN_CLASS_MODELS）")
+            if (key.isNullOrBlank()) return null to "未配置上游 Key（PIKO_CLASS_UPSTREAM_KEY_FILE）"
+            val models = parseModels(v("PIKO_CLASS_MODELS") ?: return null to "未配置模型白名单（PIKO_CLASS_MODELS）")
             if (models.isEmpty()) return null to "模型白名单为空"
-            val url = v("XIAOMAN_CLASS_UPSTREAM_URL") ?: DEFAULT_UPSTREAM
-            require(url.startsWith("https://") || url.startsWith("http://")) { "XIAOMAN_CLASS_UPSTREAM_URL 无效" }
-            val web = v("XIAOMAN_CLASS_WEB_MODEL")
-            require(web == null || web in models) { "XIAOMAN_CLASS_WEB_MODEL 不在白名单里" }
+            val url = v("PIKO_CLASS_UPSTREAM_URL") ?: DEFAULT_UPSTREAM
+            require(url.startsWith("https://") || url.startsWith("http://")) { "PIKO_CLASS_UPSTREAM_URL 无效" }
+            val web = v("PIKO_CLASS_WEB_MODEL")
+            require(web == null || web in models) { "PIKO_CLASS_WEB_MODEL 不在白名单里" }
             // keep = forward whatever the client sent; default turns deep thinking off to save output tokens.
-            val thinking = when (val t = v("XIAOMAN_CLASS_THINKING") ?: "disabled") {
+            val thinking = when (val t = v("PIKO_CLASS_THINKING") ?: "disabled") {
                 "keep" -> null
                 in THINKING_MODES -> t
-                else -> throw IllegalArgumentException("XIAOMAN_CLASS_THINKING 只能是 disabled/enabled/auto/keep")
+                else -> throw IllegalArgumentException("PIKO_CLASS_THINKING 只能是 disabled/enabled/auto/keep")
             }
             return ClassConfig(key, models, url.trimEnd('/'),
-                tokensFile ?: v("XIAOMAN_CLASS_TOKENS")?.let { Path.of(it) } ?: Path.of(ClassTokenAdmin.DEFAULT_FILE), web,
-                int("XIAOMAN_CLASS_TOKEN_CONCURRENCY", 2), int("XIAOMAN_CLASS_TOKEN_RPM", 30), int("XIAOMAN_CLASS_MAX_CONCURRENT", 32),
-                int("XIAOMAN_CLASS_MAX_BODY_MB", 8) * 1024 * 1024, int("XIAOMAN_CLASS_TIMEOUT_SECONDS", 180).toLong(),
+                tokensFile ?: v("PIKO_CLASS_TOKENS")?.let { Path.of(it) } ?: Path.of(ClassTokenAdmin.DEFAULT_FILE), web,
+                int("PIKO_CLASS_TOKEN_CONCURRENCY", 2), int("PIKO_CLASS_TOKEN_RPM", 30), int("PIKO_CLASS_MAX_CONCURRENT", 32),
+                int("PIKO_CLASS_MAX_BODY_MB", 8) * 1024 * 1024, int("PIKO_CLASS_TIMEOUT_SECONDS", 180).toLong(),
                 thinking = thinking) to "已开启"
         }
     }
@@ -184,7 +184,7 @@ class ClassGateway(
                         json(x, 200, buildJsonObject {
                             put("object", "list")
                             put("data", JsonArray(config.models.keys.map { name -> buildJsonObject {
-                                put("id", name); put("object", "model"); put("created", 0); put("owned_by", "xiaoman-class")
+                                put("id", name); put("object", "model"); put("created", 0); put("owned_by", "piko-class")
                             } }))
                         })
                     }

@@ -120,7 +120,7 @@ class WebServerTest {
             assertTrue(catalog.filter { it.jsonObject.str("id") in web }.all { it.jsonObject["available"]!!.jsonPrimitive.boolean })
             assertTrue(catalog.all { "url" !in it.jsonObject && "entry" !in it.jsonObject })
             val sid = create(s); assertEquals(22, sid.length); assertTrue(sid.matches(Regex("[A-Za-z0-9_-]+")))
-            assertEquals("Xiaoman", request(s, "/api/info").json.str("name"))
+            assertEquals("Piko", request(s, "/api/info").json.str("name"))
             assertEquals(404, request(s, "/api/chat", "missing", body = chatBody()).code)
         }
     }
@@ -241,12 +241,12 @@ class WebServerTest {
         }
     }
     @Test fun staticRootServesIndexHeadersAndRejectsTraversal() {
-        val root = Files.createTempDirectory("xiaoman-web-test")
+        val root = Files.createTempDirectory("piko-web-test")
         try {
-            Files.writeString(root.resolve("index.html"), "<html>Xiaoman</html>")
+            Files.writeString(root.resolve("index.html"), "<html>Piko</html>")
             WebServer(options().copy(staticRoot = root), scripted, logger = {}).start().use { s ->
                 val r = request(s, "/")
-                assertEquals(200, r.code); assertEquals("<html>Xiaoman</html>", r.text)
+                assertEquals(200, r.code); assertEquals("<html>Piko</html>", r.text)
                 assertEquals(listOf("nosniff"), r.headers.entries.first { it.key.equals("X-content-type-options", true) }.value)
                 assertTrue(r.headers.entries.first { it.key.equals("Content-security-policy", true) }.value.single().contains("connect-src 'self'"))
                 assertEquals(400, request(s, "/%2e%2e/index.html").code)
@@ -488,7 +488,7 @@ class WebServerTest {
         assertEquals(1, stdio.runningCount); assertEquals(2, closed.get())
         stdio.transport(server)
         assertFailsWith<dev.piko.mcp.McpException> { StdioMcp(false).transport(server) }
-        val dir = Files.createTempDirectory("xiaoman-path")
+        val dir = Files.createTempDirectory("piko-path")
         try {
             val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
             if (!isWindows) {

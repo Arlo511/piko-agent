@@ -5,7 +5,7 @@ import dev.piko.api.AppInfo
 /** iPhone app identifiers and guidance visible to the operator. */
 object IosPlatform {
     /** Default `WDA_BUNDLE_ID` of scripts/ios/wda.sh; Xcode installs the runner as `<id>.xctrunner`. */
-    const val DEFAULT_WDA_BUNDLE_ID = "com.xiaoman.WebDriverAgentRunner"
+    const val DEFAULT_WDA_BUNDLE_ID = "com.piko.WebDriverAgentRunner"
     const val WDA_BUNDLE_ID = "$DEFAULT_WDA_BUNDLE_ID.xctrunner"
 
     /** Bundle id of the installed runner for a custom `WDA_BUNDLE_ID`. */

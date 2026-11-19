@@ -114,7 +114,7 @@ if (typeof document !== 'undefined') {
       $('done-total').textContent = amountText(r.totalTokens); $('done-daily').textContent = amountText(r.dailyTokens);
       $('done-expires').textContent = r.expiresAt;
       $('android-url').textContent = location.origin + '/v1';
-      $('android-model').textContent = r.model || info.model || 'xiaoman-class';
+      $('android-model').textContent = r.model || info.model || 'piko-class';
       show('done');
     }
 

@@ -10,11 +10,11 @@ import java.time.format.DateTimeFormatter
 
 /**
  * `web-server tokens ...`: manages the class-token file on the server itself (there is no network admin API).
- * Run it as the service user (deploy installs `xiaoman-tokens`, which does that); the running server
+ * Run it as the service user (deploy installs `piko-tokens`, which does that); the running server
  * picks up changes within about a second.
  */
 object ClassTokenAdmin {
-    const val DEFAULT_FILE = "/var/lib/xiaoman-web/class-tokens.json"
+    const val DEFAULT_FILE = "/var/lib/piko-web/class-tokens.json"
     const val DEFAULT_DAILY = 500_000L
     const val DEFAULT_TOTAL = 2_000_000L
 
@@ -33,7 +33,7 @@ object ClassTokenAdmin {
   claims                       列出自助领取记录：论坛账号 → 令牌前缀、状态、用量、领取时间
   reset-claim <论坛用户名|论坛用户ID>...
       允许该论坛账号重新领取，同时作废它原来的令牌（只想恢复原令牌用 restore 论坛:用户名）
-通用选项：--file PATH（默认 ${'$'}XIAOMAN_CLASS_TOKENS 或 $DEFAULT_FILE），--timezone Asia/Shanghai
+通用选项：--file PATH（默认 ${'$'}PIKO_CLASS_TOKENS 或 $DEFAULT_FILE），--timezone Asia/Shanghai
 用量单位是模型 token（输入 + 输出），按方舟返回的 usage 记账；运行中的服务每 5 秒写回一次。"""
 
     private class Usage(message: String) : Exception(message)
@@ -50,8 +50,8 @@ object ClassTokenAdmin {
         fun flag(name: String) = rest.remove(name)
         return try {
             if (rest.isEmpty() || rest[0] in setOf("-h", "--help", "help")) { out.println(usage); return 0 }
-            val file = Path.of(option("--file") ?: env["XIAOMAN_CLASS_TOKENS"]?.takeIf { it.isNotBlank() } ?: DEFAULT_FILE)
-            val zone = ZoneId.of(option("--timezone") ?: env["XIAOMAN_TZ"]?.takeIf { it.isNotBlank() } ?: "Asia/Shanghai")
+            val file = Path.of(option("--file") ?: env["PIKO_CLASS_TOKENS"]?.takeIf { it.isNotBlank() } ?: DEFAULT_FILE)
+            val zone = ZoneId.of(option("--timezone") ?: env["PIKO_TZ"]?.takeIf { it.isNotBlank() } ?: "Asia/Shanghai")
             val store = ClassTokenStore(file, zone, clock, reloadMillis = 0)
             val command = rest.removeAt(0)
             /** [Unset] when absent, null for `none` (unlimited), otherwise the positive number. */
@@ -182,7 +182,7 @@ object ClassTokenAdmin {
         } catch (e: IllegalArgumentException) {
             err.println("错误：${e.message}"); 2
         } catch (e: java.nio.file.AccessDeniedException) {
-            err.println("错误：没有权限读写令牌文件 ${e.file}。请用 sudo xiaoman-tokens …（以服务用户运行）"); 1
+            err.println("错误：没有权限读写令牌文件 ${e.file}。请用 sudo piko-tokens …（以服务用户运行）"); 1
         } catch (e: java.io.IOException) {
             err.println("错误：读写令牌文件失败（${e.javaClass.simpleName}）"); 1
         }

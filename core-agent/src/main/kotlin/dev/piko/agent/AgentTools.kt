@@ -61,7 +61,7 @@ object AgentTools {
         ),
         ToolSpec(
             PERSONA_SET,
-            "设定或修改小满的性格（写入 persona 记忆笔记）。用户明确要求改变说话风格、人设或性格细节时使用；先复述将写入的基调和细节，用户明确同意后再调用。只影响语气、详略和引导方式，不改变工具调用和安全规则。用户同时说明职业或专业领域时，先用 memory_write 写入个人档案（permalink=profile，type=profile，类别 identity），再调用本工具。",
+            "设定或修改小可的性格（写入 persona 记忆笔记）。用户明确要求改变说话风格、人设或性格细节时使用；先复述将写入的基调和细节，用户明确同意后再调用。只影响语气、详略和引导方式，不改变工具调用和安全规则。用户同时说明职业或专业领域时，先用 memory_write 写入个人档案（permalink=profile，type=profile，类别 identity），再调用本工具。",
             schema(
                 listOf("tone"),
                 "tone" to str("性格基调，一句话，如 知无不言的亲密导师"),
@@ -100,7 +100,7 @@ object AgentTools {
         ),
         ToolSpec(
             REMINDER_SET,
-            "设置一条定时提醒：到点后小满会在手机上弹出通知。",
+            "设置一条定时提醒：到点后小可会在手机上弹出通知。",
             schema(
                 listOf("text", "at"),
                 "text" to str("提醒内容，如 喝水、带伞"),

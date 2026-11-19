@@ -6,8 +6,8 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from xiaoman_cli.logcat import format_event, parse_line  # noqa: E402
-from xiaoman_cli.traces import (  # noqa: E402
+from piko_cli.logcat import format_event, parse_line  # noqa: E402
+from piko_cli.traces import (  # noqa: E402
     display_width, load_trace, render_table, resolve_trace, summarize_action, trace_footer, truncate,
 )
 

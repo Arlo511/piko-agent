@@ -17,8 +17,8 @@ data class ModelSettings(val baseUrl: String, val model: String, val apiKey: Str
 }
 
 /**
- * Command line, environment and `$XIAOMAN_HOME/config.properties`, merged in that order of precedence.
- * API keys are read from the environment only: `XIAOMAN_CHAT_API_KEY` / `XIAOMAN_OPERATOR_API_KEY`,
+ * Command line, environment and `$PIKO_HOME/config.properties`, merged in that order of precedence.
+ * API keys are read from the environment only: `PIKO_CHAT_API_KEY` / `PIKO_OPERATOR_API_KEY`,
  * falling back to `ARK_API_KEY`.
  */
 data class RunnerConfig(
@@ -29,7 +29,7 @@ data class RunnerConfig(
     val toolArguments: String = "{}",
     val skill: String? = null,
     val outDir: File? = null,
-    /** MCP servers file; `$XIAOMAN_HOME/mcp.json` unless `--mcp` is given. */
+    /** MCP servers file; `$PIKO_HOME/mcp.json` unless `--mcp` is given. */
     val mcpFile: File? = null,
     val wdaUrl: String,
     val home: File,
@@ -55,10 +55,10 @@ data class RunnerConfig(
     /** Chinese explanation of what is missing for task/chat, or null when both models are usable. */
     fun missingModels(): String? {
         val missing = buildList {
-            if (chat.model.isBlank()) add("chat.model（或环境变量 XIAOMAN_CHAT_MODEL）")
-            if (operator.model.isBlank()) add("operator.model（或环境变量 XIAOMAN_OPERATOR_MODEL）")
-            if (chat.apiKey.isBlank()) add("环境变量 XIAOMAN_CHAT_API_KEY 或 ARK_API_KEY")
-            if (operator.apiKey.isBlank()) add("环境变量 XIAOMAN_OPERATOR_API_KEY 或 ARK_API_KEY")
+            if (chat.model.isBlank()) add("chat.model（或环境变量 PIKO_CHAT_MODEL）")
+            if (operator.model.isBlank()) add("operator.model（或环境变量 PIKO_OPERATOR_MODEL）")
+            if (chat.apiKey.isBlank()) add("环境变量 PIKO_CHAT_API_KEY 或 ARK_API_KEY")
+            if (operator.apiKey.isBlank()) add("环境变量 PIKO_OPERATOR_API_KEY 或 ARK_API_KEY")
             if (chat.baseUrl.isBlank()) add("chat.baseUrl")
         }
         return missing.takeIf { it.isNotEmpty() }?.let {
@@ -123,12 +123,12 @@ data class RunnerConfig(
             val toolArguments = if (cmd == "call") positional.getOrNull(1) ?: "{}" else "{}"
             if (cmd == "dump" && out == null) throw UsageException("dump 需要 --out DIR")
 
-            val homeDir = File(home ?: env["XIAOMAN_HOME"]?.takeIf { it.isNotBlank() } ?: File(userHome, ".xiaoman-ios").path)
+            val homeDir = File(home ?: env["PIKO_HOME"]?.takeIf { it.isNotBlank() } ?: File(userHome, ".piko-ios").path)
             val warnings = mutableListOf<String>()
             val props = loadProperties(File(homeDir, "config.properties"), warnings)
             fun setting(envName: String, prop: String, default: String = "") =
                 env[envName]?.takeIf { it.isNotBlank() } ?: props[prop] ?: default
-            val chatBase = setting("XIAOMAN_CHAT_BASE_URL", "chat.baseUrl", DEFAULT_BASE_URL)
+            val chatBase = setting("PIKO_CHAT_BASE_URL", "chat.baseUrl", DEFAULT_BASE_URL)
             val shared = env["ARK_API_KEY"].orEmpty()
             return RunnerConfig(
                 command = cmd,
@@ -137,17 +137,17 @@ data class RunnerConfig(
                 skill = skill,
                 outDir = out?.let(::File),
                 mcpFile = mcp?.let(::File),
-                wdaUrl = wda ?: env["XIAOMAN_WDA_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_WDA_URL,
+                wdaUrl = wda ?: env["PIKO_WDA_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_WDA_URL,
                 home = homeDir,
                 extraSkillDirs = skillDirs,
                 nonInteractive = nonInteractive,
                 maxSteps = maxSteps ?: 30,
                 wdaBundleId = env["WDA_BUNDLE_ID"]?.takeIf { it.isNotBlank() },
-                chat = ModelSettings(chatBase, setting("XIAOMAN_CHAT_MODEL", "chat.model"),
-                    env["XIAOMAN_CHAT_API_KEY"]?.takeIf { it.isNotBlank() } ?: shared),
-                operator = ModelSettings(setting("XIAOMAN_OPERATOR_BASE_URL", "operator.baseUrl", chatBase),
-                    setting("XIAOMAN_OPERATOR_MODEL", "operator.model"),
-                    env["XIAOMAN_OPERATOR_API_KEY"]?.takeIf { it.isNotBlank() } ?: shared),
+                chat = ModelSettings(chatBase, setting("PIKO_CHAT_MODEL", "chat.model"),
+                    env["PIKO_CHAT_API_KEY"]?.takeIf { it.isNotBlank() } ?: shared),
+                operator = ModelSettings(setting("PIKO_OPERATOR_BASE_URL", "operator.baseUrl", chatBase),
+                    setting("PIKO_OPERATOR_MODEL", "operator.model"),
+                    env["PIKO_OPERATOR_API_KEY"]?.takeIf { it.isNotBlank() } ?: shared),
                 warnings = warnings,
             )
         }

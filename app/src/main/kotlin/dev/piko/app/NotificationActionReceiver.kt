@@ -20,10 +20,10 @@ class NotificationActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        const val ACTION_STOP = "dev.xiaoman.app.action.STOP"
-        const val ACTION_APPROVE_ONCE = "dev.xiaoman.app.action.APPROVE_ONCE"
-        const val ACTION_APPROVE_TASK = "dev.xiaoman.app.action.APPROVE_TASK"
-        const val ACTION_DENY = "dev.xiaoman.app.action.DENY"
+        const val ACTION_STOP = "dev.piko.app.action.STOP"
+        const val ACTION_APPROVE_ONCE = "dev.piko.app.action.APPROVE_ONCE"
+        const val ACTION_APPROVE_TASK = "dev.piko.app.action.APPROVE_TASK"
+        const val ACTION_DENY = "dev.piko.app.action.DENY"
         const val EXTRA_APPROVAL_ID = "approval_id"
     }
 }

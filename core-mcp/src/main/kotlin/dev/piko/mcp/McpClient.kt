@@ -32,7 +32,7 @@ class McpClient(
             request("initialize", buildJsonObject {
                 put("protocolVersion", PROTOCOL_VERSION)
                 put("capabilities", buildJsonObject { })
-                putJsonObject("clientInfo") { put("name", "xiaoman"); put("version", version) }
+                putJsonObject("clientInfo") { put("name", "piko"); put("version", version) }
             })
             safeExchange(buildJsonObject { put("jsonrpc", "2.0"); put("method", "notifications/initialized") })
             initialized = true

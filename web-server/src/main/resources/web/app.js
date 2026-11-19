@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Xiaoman web API (same origin; no external dependencies):
+ * Piko web API (same origin; no external dependencies):
  * GET /api/info {name,version,accessCodeRequired,classTokens}; GET /api/catalog {servers}.
  * POST /api/session {sessionId}; X-Piko-Session in subsequent requests.
  * All /api/* use X-Piko-Access when configured; 401 asks for a new code.
@@ -258,9 +258,9 @@ if (typeof document !== 'undefined') {
       const kb = Math.ceil(new TextEncoder().encode(JSON.stringify(notes)).length / 1024);
       $('memory-count').textContent = notes.length ? '共 ' + notes.length + ' 条，约 ' + kb + ' KB' : '';
       $('memory-warning').hidden = payload.dropped === 0;
-      $('memory-warning').textContent = '记忆太多，最早的 ' + payload.dropped + ' 条暂时不会发给小满。可以删掉不需要的。';
+      $('memory-warning').textContent = '记忆太多，最早的 ' + payload.dropped + ' 条暂时不会发给小可。可以删掉不需要的。';
       $('clear-memory').disabled = !notes.length;
-      if (!notes.length) { list.append(node('p', 'muted', '还没有记忆。聊天时说「记住……」，小满就会记在这里。')); return; }
+      if (!notes.length) { list.append(node('p', 'muted', '还没有记忆。聊天时说「记住……」，小可就会记在这里。')); return; }
       for (const note of [...notes].sort((a, b) => b.updatedAt - a.updatedAt)) {
         const item = node('article', 'memory-item');
         const top = node('div', 'service-top');
@@ -392,7 +392,7 @@ if (typeof document !== 'undefined') {
         el.append(line);
       } else if (row.type === 'approval' || row.type === 'question') {
         const card = node('div', 'action-card');
-        card.append(node('span', 'eyebrow', row.type === 'approval' ? '需要你确认' : '小满问'));
+        card.append(node('span', 'eyebrow', row.type === 'approval' ? '需要你确认' : '小可问'));
         card.append(node('h3', '', row.type === 'approval' ? row.title || '允许这次调用吗？' : row.question));
         if (row.type === 'approval') {
           card.append(node('p', 'muted', '服务：' + (row.server || '未知') + ' · 工具：' + (row.tool || '未知')));
@@ -453,7 +453,7 @@ if (typeof document !== 'undefined') {
         const add = button('添加到日历', () => {
           const blob = new Blob([row.ics], {type: 'text/calendar;charset=utf-8'});
           const url = URL.createObjectURL(blob);
-          const anchor = node('a'); anchor.href = url; anchor.download = 'xiaoman-reminder.ics';
+          const anchor = node('a'); anchor.href = url; anchor.download = 'piko-reminder.ics';
           document.body.append(anchor); anchor.click(); anchor.remove();
           // Leave Safari time to hand the calendar file to its native preview.
           setTimeout(() => URL.revokeObjectURL(url), 60000);
@@ -752,7 +752,7 @@ if (typeof document !== 'undefined') {
     });
     $('clear-memory').addEventListener('click', () => {
       if (busy) { notify('请等本次对话结束后再清空记忆。'); return; }
-      if (!window.confirm('清空这台设备上小满的全部记忆？此操作不能撤销。')) return;
+      if (!window.confirm('清空这台设备上小可的全部记忆？此操作不能撤销。')) return;
       notes = []; remove('memory'); renderMemory(); notify('记忆已清空。');
     });
     // Another tab of the same site changed memory: pick it up.

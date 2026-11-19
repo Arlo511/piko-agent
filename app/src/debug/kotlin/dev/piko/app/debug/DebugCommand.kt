@@ -6,7 +6,7 @@ import dev.piko.app.RunIds
 sealed class DebugCommand {
     data class Run(val goal: String, val skill: String?, val runId: String) : DebugCommand()
 
-    /** A RUN that cannot run; the receiver still ends the run with Failed so `xiaoman run --follow` returns. */
+    /** A RUN that cannot run; the receiver still ends the run with Failed so `piko run --follow` returns. */
     data class InvalidRun(val runId: String, val message: String) : DebugCommand()
 
     data object Stop : DebugCommand()
@@ -17,10 +17,10 @@ sealed class DebugCommand {
     data class Say(val text: String) : DebugCommand()
 
     companion object {
-        const val ACTION_RUN = "dev.xiaoman.debug.RUN"
-        const val ACTION_STOP = "dev.xiaoman.debug.STOP"
-        const val ACTION_RELOAD_SKILLS = "dev.xiaoman.debug.RELOAD_SKILLS"
-        const val ACTION_SAY = "dev.xiaoman.debug.SAY"
+        const val ACTION_RUN = "dev.piko.debug.RUN"
+        const val ACTION_STOP = "dev.piko.debug.STOP"
+        const val ACTION_RELOAD_SKILLS = "dev.piko.debug.RELOAD_SKILLS"
+        const val ACTION_SAY = "dev.piko.debug.SAY"
         const val EXTRA_TEXT = "text"
         const val EXTRA_GOAL = "goal"
         const val EXTRA_SKILL = "skill"

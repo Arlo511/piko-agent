@@ -1,10 +1,10 @@
 """Skill folder validation with the same rules and messages as the app.
 
-Mirrors core-skills/src/main/kotlin/dev/xiaoman/skills/{SkillParser,FlowParser,Yaml}.kt:
+Mirrors core-skills/src/main/kotlin/dev/piko/skills/{SkillParser,FlowParser,Yaml}.kt:
 every problem the app would report is reported here, in the same order, at the same
 line. Like the app, flow.yaml is only checked once SKILL.md itself is valid (the flow
 is checked against the skill's deeplinks and apps). Format reference:
-core-api/src/main/kotlin/dev/xiaoman/api/Skills.kt.
+core-api/src/main/kotlin/dev/piko/api/Skills.kt.
 """
 
 from __future__ import annotations

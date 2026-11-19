@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "xiaoman"
+rootProject.name = "piko"
 
 include(
     ":core-api",
@@ -29,7 +29,7 @@ include(
     ":web-server",
 )
 
-// The iOS runner is built on a Mac that usually has no Android SDK: -Pxiaoman.iosOnly=true skips the Android modules.
-if (providers.gradleProperty("xiaoman.iosOnly").orNull != "true") {
+// The iOS runner is built on a Mac that usually has no Android SDK: -Ppiko.iosOnly=true skips the Android modules.
+if (providers.gradleProperty("piko.iosOnly").orNull != "true") {
     include(":hands", ":app")
 }

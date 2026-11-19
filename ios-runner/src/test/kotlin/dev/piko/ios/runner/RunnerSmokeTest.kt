@@ -125,8 +125,8 @@ class RunnerSmokeTest {
         err: ByteArrayOutputStream = ByteArrayOutputStream(),
         chat: List<ChatResponse> = emptyList(),
     ) = Runner(
-        env = mapOf("XIAOMAN_HOME" to home.path, "XIAOMAN_WDA_URL" to wda.url, "ARK_API_KEY" to KEY,
-            "XIAOMAN_CHAT_MODEL" to "chat-m", "XIAOMAN_OPERATOR_MODEL" to "op-m"),
+        env = mapOf("PIKO_HOME" to home.path, "PIKO_WDA_URL" to wda.url, "ARK_API_KEY" to KEY,
+            "PIKO_CHAT_MODEL" to "chat-m", "PIKO_OPERATOR_MODEL" to "op-m"),
         input = BufferedReader(StringReader("")),
         out = PrintStream(out, true, Charsets.UTF_8),
         err = PrintStream(err, true, Charsets.UTF_8),
@@ -225,7 +225,7 @@ class RunnerSmokeTest {
 
     @Test fun taskWithoutModelsExitsTwo() {
         val err = ByteArrayOutputStream()
-        val r = Runner(env = mapOf("XIAOMAN_HOME" to home.path), input = BufferedReader(StringReader("")),
+        val r = Runner(env = mapOf("PIKO_HOME" to home.path), input = BufferedReader(StringReader("")),
             out = PrintStream(ByteArrayOutputStream()), err = PrintStream(err, true, Charsets.UTF_8), hasConsole = false,
             llm = LlmClientFactory { error("must not be called") }, userHome = home.path)
         assertEquals(2, r.run(listOf("task", "随便")))

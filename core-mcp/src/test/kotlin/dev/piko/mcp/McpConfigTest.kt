@@ -6,7 +6,7 @@ import kotlin.test.*
 class McpConfigTest {
     @Test fun standardAndExtendedConfig() {
         val config = McpConfig.parse("""{"_comment":"ignored","mcpServers":{
-            "maps":{"url":"https://example.test/mcp","title":"地图","headers":{"X-Client":"xiaoman"},
+            "maps":{"url":"https://example.test/mcp","title":"地图","headers":{"X-Client":"piko"},
               "confirm":"none","tools":["weather"],"timeoutSeconds":9,"_comment":"ignored"},
             "local":{"command":"python3","args":["server.py"],"env":{"MODE":"local"}},
             "disabled":{"url":"https://example.test","enabled":false,"confirm":"all"},
@@ -18,7 +18,7 @@ class McpConfigTest {
             assertEquals(ConfirmPolicy.NONE, confirm)
             assertEquals(setOf("weather"), tools)
             assertEquals(9, timeoutSeconds)
-            assertEquals("xiaoman", headers["X-Client"])
+            assertEquals("piko", headers["X-Client"])
         }
         with(config.servers[1]) {
             assertEquals("python3", command)

@@ -8,13 +8,13 @@ import java.util.TimeZone
 fun main(args: Array<String>) {
     if (args.firstOrNull() == "tokens") kotlin.system.exitProcess(ClassTokenAdmin.run(args.drop(1)))
     if ("--help" in args) {
-        println("""小满网页版后端
+        println("""小可网页版后端
 用法：web-server [--host 127.0.0.1] [--port 8787] [--static DIR]
   [--access-code CODE] [--allow-private] [--timezone Asia/Shanghai] [--session-hours 2]
   [--skills DIR] [--stdio-mcp auto|on|off] [--max-stdio 20] [--class-tokens FILE] [--local [--no-browser]]
        web-server tokens …   管理课堂令牌（web-server tokens --help）
-访问码也可通过 XIAOMAN_WEB_ACCESS_CODE 设置。默认仅监听本机。
---skills DIR 加载聊天工作流，也可用 XIAOMAN_WEB_SKILLS 设置，命令行优先。
+访问码也可通过 PIKO_WEB_ACCESS_CODE 设置。默认仅监听本机。
+--skills DIR 加载聊天工作流，也可用 PIKO_WEB_SKILLS 设置，命令行优先。
 --local 未配置目录时尝试工作目录或 jar 附近的 skills/examples、skills。
 --local 学员在自己电脑上运行（启动包脚本使用）：端口被占用时自动往后换，没给访问码就随机生成，
   打印局域网地址，并开启只能在本机打开的扫码页 /connect（自动用浏览器打开，--no-browser 不打开）。
@@ -23,20 +23,20 @@ fun main(args: Array<String>) {
 记忆保存在学员浏览器里，随每次对话发来，服务器不落盘。
 --allow-private 同时允许模型和 MCP 访问内网，仅用于本机测试；--allow-private-mcp 为同义词。
 将网页添加到 Safari 主屏幕；提醒可导入日历。
-课堂令牌（默认关闭）：设置 XIAOMAN_CLASS_UPSTREAM_KEY_FILE（或 XIAOMAN_CLASS_UPSTREAM_KEY）和
-  XIAOMAN_CLASS_MODELS（如 xiaoman-class=doubao-seed-1-6-250615），并用 web-server tokens generate 生成令牌文件后开启；
-  可选 XIAOMAN_CLASS_UPSTREAM_URL、XIAOMAN_CLASS_TOKENS、XIAOMAN_CLASS_WEB_MODEL、XIAOMAN_CLASS_TOKEN_RPM、
-  XIAOMAN_CLASS_TOKEN_CONCURRENCY、XIAOMAN_CLASS_MAX_CONCURRENT、XIAOMAN_CLASS_MAX_BODY_MB、XIAOMAN_CLASS_TIMEOUT_SECONDS。
+课堂令牌（默认关闭）：设置 PIKO_CLASS_UPSTREAM_KEY_FILE（或 PIKO_CLASS_UPSTREAM_KEY）和
+  PIKO_CLASS_MODELS（如 piko-class=doubao-seed-1-6-250615），并用 web-server tokens generate 生成令牌文件后开启；
+  可选 PIKO_CLASS_UPSTREAM_URL、PIKO_CLASS_TOKENS、PIKO_CLASS_WEB_MODEL、PIKO_CLASS_TOKEN_RPM、
+  PIKO_CLASS_TOKEN_CONCURRENCY、PIKO_CLASS_MAX_CONCURRENT、PIKO_CLASS_MAX_BODY_MB、PIKO_CLASS_TIMEOUT_SECONDS。
 自助领取（默认关闭，需要先开启课堂令牌）：学员打开 /claim，在论坛领取帖回复验证短语后领到令牌，每个论坛账号一份。
-  XIAOMAN_CLAIM_TOPIC_ID（帖子编号或链接）和 XIAOMAN_CLAIM_EXPIRES（统一过期时间，如 2026-11-12 21:00，按 --timezone）必填；
-  可选 XIAOMAN_CLAIM_MAX（默认 50 份）、XIAOMAN_CLAIM_TOTAL_TOKENS（每份总额度，默认 1000000）、
-  XIAOMAN_CLAIM_DAILY_TOKENS（每日上限，默认同总额度）、XIAOMAN_CLAIM_FORUM（默认 https://forum.trae.cn）、
-  XIAOMAN_CLAIM_MIN_CREATED_BEFORE（只限此日期前注册的账号）、XIAOMAN_CLAIM_MIN_TRUST（最低信任等级 0-4，默认 0）。""")
+  PIKO_CLAIM_TOPIC_ID（帖子编号或链接）和 PIKO_CLAIM_EXPIRES（统一过期时间，如 2026-11-12 21:00，按 --timezone）必填；
+  可选 PIKO_CLAIM_MAX（默认 50 份）、PIKO_CLAIM_TOTAL_TOKENS（每份总额度，默认 1000000）、
+  PIKO_CLAIM_DAILY_TOKENS（每日上限，默认同总额度）、PIKO_CLAIM_FORUM（默认 https://forum.trae.cn）、
+  PIKO_CLAIM_MIN_CREATED_BEFORE（只限此日期前注册的账号）、PIKO_CLAIM_MIN_TRUST（最低信任等级 0-4，默认 0）。""")
         return
     }
     try {
-        var options = WebServer.Options(accessCode = System.getenv("XIAOMAN_WEB_ACCESS_CODE"),
-            skillsRoot = System.getenv("XIAOMAN_WEB_SKILLS")?.takeIf { it.isNotBlank() }?.let(Path::of))
+        var options = WebServer.Options(accessCode = System.getenv("PIKO_WEB_ACCESS_CODE"),
+            skillsRoot = System.getenv("PIKO_WEB_SKILLS")?.takeIf { it.isNotBlank() }?.let(Path::of))
         var stdioMode = "auto"
         var classTokens: Path? = null
         var local = false
@@ -78,7 +78,7 @@ fun main(args: Array<String>) {
         TimeZone.setDefault(TimeZone.getTimeZone(options.timezone))
         val server = if (local) LocalLaunch.start(options) else WebServer(options).start()
         Runtime.getRuntime().addShutdownHook(Thread { server.close() })
-        println("小满已监听 http://${options.host}:${server.port}")
+        println("小可已监听 http://${options.host}:${server.port}")
         println(when {
             options.stdioMcp && !nodeFound -> "12306 火车票（stdio）：已强制开启，但 PATH 里没有 node/npx，调用会失败"
             options.stdioMcp -> "12306 火车票（stdio）：已开启，最多 ${options.maxStdioProcesses} 个进程"

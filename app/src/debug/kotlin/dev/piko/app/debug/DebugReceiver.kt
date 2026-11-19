@@ -8,8 +8,8 @@ import dev.piko.app.PikoApp
 import kotlinx.coroutines.launch
 
 /**
- * Debug-build bridge for the `xiaoman` CLI:
- * `adb shell am broadcast -n dev.piko.app/.debug.DebugReceiver -a dev.xiaoman.debug.RUN --es goal "打开设置" --es run_id r1`.
+ * Debug-build bridge for the `piko` CLI:
+ * `adb shell am broadcast -n dev.piko.app/.debug.DebugReceiver -a dev.piko.debug.RUN --es goal "打开设置" --es run_id r1`.
  *
  * RUN hands the task to the agent session (the foreground [dev.piko.app.AgentService] is
  * started for it); approvals and questions still go to the user through the app. Every RUN ends

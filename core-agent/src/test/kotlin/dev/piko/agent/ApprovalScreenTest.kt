@@ -33,7 +33,7 @@ class ApprovalScreenTest {
         return loop.execute(TaskRun("approval", "测试入口", null, Events(), stop), tap, before) to device
     }
 
-    @Test fun approvalInXiaomanCannotTapOldCoordinates() = runTest {
+    @Test fun approvalInPikoCannotTapOldCoordinates() = runTest {
         val (result, device) = execute(screen("dev.piko.app", "允许一次"))
         assertIs<Executed.Blocked>(result)
         assertTrue(device.performed.isEmpty())

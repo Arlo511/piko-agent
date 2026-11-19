@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
- * Task ids double as trace run ids. The debug bridge [prime]s the next id so `xiaoman run
+ * Task ids double as trace run ids. The debug bridge [prime]s the next id so `piko run
  * --run-id r1` finds its trace under `traces/r1/`; otherwise ids look like `app-20261031-120000-a1b2`.
  */
 class RunIds(

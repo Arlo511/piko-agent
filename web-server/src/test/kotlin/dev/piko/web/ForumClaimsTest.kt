@@ -116,7 +116,7 @@ class ForumClaimsTest {
         ClaimConfig(42, expires, max, forumUrl = forum, createdBefore = before, minTrust = trust, perIpStartsPerMinute = perIp, forumTimeoutSeconds = 3)
     private fun server(claim: ClaimConfig, upstream: String = "http://127.0.0.1:9/api/v3", accessCode: String? = null) = WebServer(WebServer.Options(
         port = 0, allowPrivateMcp = true, accessCode = accessCode, claimConfig = claim,
-        classConfig = ClassConfig(upstreamKey, linkedMapOf("xiaoman-class" to "doubao-real"), upstream, file, flushMillis = 60_000, reloadMillis = 0),
+        classConfig = ClassConfig(upstreamKey, linkedMapOf("piko-class" to "doubao-real"), upstream, file, flushMillis = 60_000, reloadMillis = 0),
     ), clock = clock, logger = logs::add).start()
 
     private data class Reply(val code: Int, val text: String, val headers: Map<String?, List<String>>) {
@@ -167,7 +167,7 @@ class ForumClaimsTest {
                 val started = startClaim(s, "@alice")
                 assertEquals(200, started.code, started.text)
                 val phrase = started.json.str("phrase")
-                assertTrue(phrase.matches(Regex("领取小满令牌 [2-9A-Z]{6}")), phrase)
+                assertTrue(phrase.matches(Regex("领取小可令牌 [2-9A-Z]{6}")), phrase)
                 assertEquals("Alice", started.json.str("username"), "the forum's spelling is used")
                 assertEquals("${forum.url}/t/42", started.json.str("topicUrl"))
                 assertEquals(600, started.json["expiresInSeconds"]!!.jsonPrimitive.int)
@@ -175,14 +175,14 @@ class ForumClaimsTest {
 
                 // Typed on a phone: extra spaces, full-width letters, lower case, inside other text.
                 val code = phrase.substringAfter(' ')
-                val typed = "领取 小满令牌　" + code.lowercase().map { if (it.isLetter()) (it.code - 'a'.code + 'ａ'.code).toChar() else it }.joinToString("")
+                val typed = "领取 小可令牌　" + code.lowercase().map { if (it.isLetter()) (it.code - 'a'.code + 'ａ'.code).toChar() else it }.joinToString("")
                 forum.reply(alice, "收到！$typed")
                 val done = verify(s, started.json.str("challengeId"))
                 assertEquals(200, done.code, done.text)
                 val token = done.json.str("token")
                 assertTrue(ClassTokenCodec.looksLikeToken(token))
                 assertEquals("2026-11-12 21:00", done.json.str("expiresAt"))
-                assertEquals("xiaoman-class", done.json.str("model"))
+                assertEquals("piko-class", done.json.str("model"))
 
                 val t = tokens().single()
                 assertEquals("论坛:Alice", t.label); assertEquals(expires, t.expiresAt)
@@ -195,7 +195,7 @@ class ForumClaimsTest {
 
                 val c = URL("http://127.0.0.1:${s.port}/v1/chat/completions").openConnection() as HttpURLConnection
                 c.requestMethod = "POST"; c.doOutput = true; c.setRequestProperty("Authorization", "Bearer $token"); c.setRequestProperty("Content-Type", "application/json")
-                c.outputStream.use { it.write("""{"model":"xiaoman-class","messages":[{"role":"user","content":"你好"}]}""".toByteArray()) }
+                c.outputStream.use { it.write("""{"model":"piko-class","messages":[{"role":"user","content":"你好"}]}""".toByteArray()) }
                 assertEquals(200, c.responseCode); c.inputStream.close()
                 assertTrue(call(s, "/api/info").json["classTokens"]!!.jsonPrimitive.boolean)
                 assertTrue(logs.any { it == "自助领取 论坛:Alice(${token.take(6)}) 已发放" }, logs.toString())
@@ -215,7 +215,7 @@ class ForumClaimsTest {
             server(claimConfig(forum.url)).use { s ->
                 val started = startClaim(s, "alice"); val id = started.json.str("challengeId")
                 assertEquals("reply_not_found", verify(s, id).errorCode)
-                forum.reply(alice, "领取小满令牌 AAAAAA")
+                forum.reply(alice, "领取小可令牌 AAAAAA")
                 assertEquals("reply_not_found", verify(s, id).also { assertEquals(404, it.code) }.errorCode)
                 // Bob posts Alice's phrase: found, but by the wrong account.
                 forum.reply(bob, started.json.str("phrase"))
@@ -424,19 +424,19 @@ class ForumClaimsTest {
 
     @Test fun configFromEnvironment() {
         assertNull(ClaimConfig.fromEnv(emptyMap(), zone).first)
-        val (c, status) = ClaimConfig.fromEnv(mapOf("XIAOMAN_CLAIM_TOPIC_ID" to "https://forum.trae.cn/t/xiaoman-claim/465300/3",
-            "XIAOMAN_CLAIM_EXPIRES" to "2026-11-12 21:00", "XIAOMAN_CLAIM_MIN_CREATED_BEFORE" to "2026-11-01", "XIAOMAN_CLAIM_MIN_TRUST" to "1",
-            "XIAOMAN_CLAIM_TOTAL_TOKENS" to "2_000_000"), zone, now = start)
+        val (c, status) = ClaimConfig.fromEnv(mapOf("PIKO_CLAIM_TOPIC_ID" to "https://forum.trae.cn/t/piko-claim/465300/3",
+            "PIKO_CLAIM_EXPIRES" to "2026-11-12 21:00", "PIKO_CLAIM_MIN_CREATED_BEFORE" to "2026-11-01", "PIKO_CLAIM_MIN_TRUST" to "1",
+            "PIKO_CLAIM_TOTAL_TOKENS" to "2_000_000"), zone, now = start)
         assertEquals("已开启", status)
         assertEquals(465300, c!!.topicId); assertEquals(expires, c.expiresAt); assertEquals(50, c.max)
         assertEquals(2_000_000, c.totalTokens); assertEquals(2_000_000, c.dailyTokens, "daily defaults to the total")
         assertEquals(Instant.parse("2026-10-31T16:00:00Z").toEpochMilli(), c.createdBefore); assertEquals(1, c.minTrust)
         assertEquals("https://forum.trae.cn/t/465300", c.topicUrl)
-        assertEquals(465300, ClaimConfig.fromEnv(mapOf("XIAOMAN_CLAIM_TOPIC_ID" to "465300", "XIAOMAN_CLAIM_EXPIRES" to "2026-11-12T21:00:00+08:00"), zone).first!!.topicId)
-        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("XIAOMAN_CLAIM_TOPIC_ID" to "465300"), zone) }
-        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("XIAOMAN_CLAIM_TOPIC_ID" to "abc", "XIAOMAN_CLAIM_EXPIRES" to "2026-11-12 21:00"), zone) }
-        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("XIAOMAN_CLAIM_TOPIC_ID" to "1", "XIAOMAN_CLAIM_EXPIRES" to "明天"), zone) }
-        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("XIAOMAN_CLAIM_TOPIC_ID" to "1", "XIAOMAN_CLAIM_EXPIRES" to "2026-11-12 21:00", "XIAOMAN_CLAIM_MIN_TRUST" to "9"), zone) }
+        assertEquals(465300, ClaimConfig.fromEnv(mapOf("PIKO_CLAIM_TOPIC_ID" to "465300", "PIKO_CLAIM_EXPIRES" to "2026-11-12T21:00:00+08:00"), zone).first!!.topicId)
+        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("PIKO_CLAIM_TOPIC_ID" to "465300"), zone) }
+        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("PIKO_CLAIM_TOPIC_ID" to "abc", "PIKO_CLAIM_EXPIRES" to "2026-11-12 21:00"), zone) }
+        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("PIKO_CLAIM_TOPIC_ID" to "1", "PIKO_CLAIM_EXPIRES" to "明天"), zone) }
+        assertFailsWith<IllegalArgumentException> { ClaimConfig.fromEnv(mapOf("PIKO_CLAIM_TOPIC_ID" to "1", "PIKO_CLAIM_EXPIRES" to "2026-11-12 21:00", "PIKO_CLAIM_MIN_TRUST" to "9"), zone) }
     }
 
     @Test fun claimRecordsSurviveOtherAdminCommands() {
@@ -452,10 +452,10 @@ class ForumClaimsTest {
         assertEquals(3, tokens().size)
     }
 
-    /** Read-only check of the parser against the real forum; runs only with XIAOMAN_REAL_FORUM_TOPIC set (e.g. 5). */
+    /** Read-only check of the parser against the real forum; runs only with PIKO_REAL_FORUM_TOPIC set (e.g. 5). */
     @Test fun realForumReadOnly() {
-        val topic = System.getenv("XIAOMAN_REAL_FORUM_TOPIC")?.toLongOrNull() ?: return
-        val client = ForumClient(System.getenv("XIAOMAN_REAL_FORUM") ?: ClaimConfig.DEFAULT_FORUM, okhttp3.OkHttpClient(), 20)
+        val topic = System.getenv("PIKO_REAL_FORUM_TOPIC")?.toLongOrNull() ?: return
+        val client = ForumClient(System.getenv("PIKO_REAL_FORUM") ?: ClaimConfig.DEFAULT_FORUM, okhttp3.OkHttpClient(), 20)
         val ids = client.stream(topic)
         assertTrue(ids.size > 20, "stream has every post ID, not only the first chunk: ${ids.size}")
         val posts = client.posts(topic, ids.takeLast(50))

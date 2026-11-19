@@ -184,7 +184,7 @@ class Runner(
 
     private fun printEvent(event: AgentEvent) {
         when (event) {
-            is AgentEvent.Reply -> out.println("小满：${event.text}")
+            is AgentEvent.Reply -> out.println("小可：${event.text}")
             is AgentEvent.SkillChosen -> out.println("使用技能：${event.skillName}")
             is AgentEvent.PhoneTaskStarted -> out.println("开始手机任务：${event.goal}" + (event.skillName?.let { "（技能 $it）" } ?: ""))
             is AgentEvent.StepPlanned -> out.println("  [${event.stepIndex + 1}] ${ScreenText.describe(event.action)}")
@@ -202,7 +202,7 @@ class Runner(
 
     companion object {
         val USAGE = """
-            ios-runner：在 Mac 上通过 WebDriverAgent 操作 iPhone 的小满。
+            ios-runner：在 Mac 上通过 WebDriverAgent 操作 iPhone 的小可。
 
             用法：
               ios-runner check [--wda URL]                     检查 WDA 连接、截图和界面节点
@@ -214,18 +214,18 @@ class Runner(
               ios-runner call 工具名 '{"参数":"值"}'            直接调用一个 MCP 工具（不经过模型，用于排查）
 
             通用参数：
-              --wda URL           WDA 地址，默认 XIAOMAN_WDA_URL 或 http://127.0.0.1:8100
+              --wda URL           WDA 地址，默认 PIKO_WDA_URL 或 http://127.0.0.1:8100
                                   不插线时用手机的局域网地址：scripts/ios/wda.sh url
-              --home DIR          数据目录（memory/ skills/ traces/ config.properties），默认 XIAOMAN_HOME 或 ~/.xiaoman-ios
+              --home DIR          数据目录（memory/ skills/ traces/ config.properties），默认 PIKO_HOME 或 ~/.piko-ios
               --skills DIR        追加技能目录，可重复，例如仓库里的 skills/ios
               --non-interactive   不读终端输入：需要确认的操作一律拒绝
               --max-steps N       单个任务的最大步数，默认 30
-              --mcp FILE          MCP 服务器配置，默认 XIAOMAN_HOME/mcp.json（格式见 mcp/servers.example.json）
+              --mcp FILE          MCP 服务器配置，默认 PIKO_HOME/mcp.json（格式见 mcp/servers.example.json）
 
             任务进行中按 Ctrl-C 会在下一步前停止任务，再按一次退出程序。
             模型：config.properties 写 chat.baseUrl、chat.model、operator.baseUrl、operator.model；
-            环境变量 XIAOMAN_CHAT_MODEL / XIAOMAN_OPERATOR_MODEL / XIAOMAN_CHAT_BASE_URL / XIAOMAN_OPERATOR_BASE_URL 可覆盖。
-            API Key 只从环境变量读取：XIAOMAN_CHAT_API_KEY、XIAOMAN_OPERATOR_API_KEY，缺省用 ARK_API_KEY。
+            环境变量 PIKO_CHAT_MODEL / PIKO_OPERATOR_MODEL / PIKO_CHAT_BASE_URL / PIKO_OPERATOR_BASE_URL 可覆盖。
+            API Key 只从环境变量读取：PIKO_CHAT_API_KEY、PIKO_OPERATOR_API_KEY，缺省用 ARK_API_KEY。
         """.trimIndent()
     }
 }

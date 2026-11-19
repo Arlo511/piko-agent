@@ -1,6 +1,6 @@
-# 在 Mac 上使用小满操作 iPhone
+# 在 Mac 上使用小可操作 iPhone
 
-iOS 限制 App 读取和操作其他 App 的界面，因此无法像 Android 那样，在 iPhone 上装一个小满 App 就直接操作淘宝、设置等应用。本方案需要一台 Mac，通过 Apple 的 UI 测试工具控制你自己的 iPhone。
+iOS 限制 App 读取和操作其他 App 的界面，因此无法像 Android 那样，在 iPhone 上装一个小可 App 就直接操作淘宝、设置等应用。本方案需要一台 Mac，通过 Apple 的 UI 测试工具控制你自己的 iPhone。
 
 Mac 上的 JVM 命令行 `ios-runner` 负责聊天、模型请求、记忆、技能、安全确认和 Agent 操作循环，复用 `core-*` 模块。`ios-hands` 把点击、输入、截图等请求交给 iPhone 上的 WebDriverAgent（下文简称 WDA）。WDA 是 Appium 维护的 XCTest UI 测试 runner，由 Xcode 构建、签名并在手机上运行。
 
@@ -54,7 +54,7 @@ bash scripts/ios/doctor.sh check
 
 ```bash
 export TEAM_ID="你的TeamID"
-export WDA_BUNDLE_ID="com.yourname.xiaoman.WebDriverAgentRunner"
+export WDA_BUNDLE_ID="com.yourname.piko.WebDriverAgentRunner"
 # 多台设备连接时，请从 doctor 的设备列表复制目标设备 UDID：
 # export UDID="设备UDID"
 bash scripts/ios/wda.sh setup
@@ -62,7 +62,7 @@ bash scripts/ios/wda.sh setup
 
 未设置 `UDID` 时，脚本从 `xcrun xctrace list devices` 选择第一台已连接真机，排除模拟器和 Mac 本机。多设备场景请明确指定。
 
-`setup` 从 `https://github.com/appium/WebDriverAgent` 下载固定 tag（默认 `v16.15.3`），通过 `xcodebuild build-for-testing` 构建 WebDriverAgentRunner，并允许 Xcode 更新签名配置。可以设置 `WDA_REF` 使用与你的 Xcode/iOS 兼容的 tag。所有脚本管理的源码、构建产物、临时文件、日志、虚拟环境和 PID 都在 `${XIAOMAN_IOS_HOME:-$HOME/.xiaoman-ios}/wda/` 下。更换设备或签名、签名过期后，先 `stop` 再重新 `setup`。
+`setup` 从 `https://github.com/appium/WebDriverAgent` 下载固定 tag（默认 `v16.15.3`），通过 `xcodebuild build-for-testing` 构建 WebDriverAgentRunner，并允许 Xcode 更新签名配置。可以设置 `WDA_REF` 使用与你的 Xcode/iOS 兼容的 tag。所有脚本管理的源码、构建产物、临时文件、日志、虚拟环境和 PID 都在 `${PIKO_IOS_HOME:-$HOME/.piko-ios}/wda/` 下。更换设备或签名、签名过期后，先 `stop` 再重新 `setup`。
 
 ### 3. 在手机信任开发者证书
 
@@ -83,10 +83,10 @@ bash scripts/ios/wda.sh status
 ```bash
 export WDA_PORT=8101
 bash scripts/ios/wda.sh forward
-export XIAOMAN_WDA_URL=http://127.0.0.1:8101
+export PIKO_WDA_URL=http://127.0.0.1:8101
 ```
 
-已有转发进程时先执行 `stop`，再用新端口重新 `start` 和 `forward`。设备端口固定为 8100。也可以设置 `XIAOMAN_WDA_URL=http://<设备Wi-Fi-IP>:8100`，跳过 USB 转发；只在可信网络使用，勿把 WDA 端口公开到互联网。USB 连接通常更稳定。
+已有转发进程时先执行 `stop`，再用新端口重新 `start` 和 `forward`。设备端口固定为 8100。也可以设置 `PIKO_WDA_URL=http://<设备Wi-Fi-IP>:8100`，跳过 USB 转发；只在可信网络使用，勿把 WDA 端口公开到互联网。USB 连接通常更稳定。
 
 ### 不插线使用（同一局域网）
 
@@ -97,7 +97,7 @@ export XIAOMAN_WDA_URL=http://127.0.0.1:8101
 3. 让 runner 直接连手机：
 
 ```bash
-export XIAOMAN_WDA_URL="$(bash scripts/ios/wda.sh url)"
+export PIKO_WDA_URL="$(bash scripts/ios/wda.sh url)"
 bash scripts/ios/wda.sh status
 ios-runner check
 ```
@@ -110,27 +110,27 @@ Mac 仍然必不可少：iPhone 上的 WDA 是由 Mac 上的 `xcodebuild` 拉起
 
 | 配置 | 默认值 / 用途 |
 |---|---|
-| `XIAOMAN_WDA_URL` | `http://127.0.0.1:8100`，WDA 连接地址 |
-| `XIAOMAN_HOME` | `~/.xiaoman-ios`，保存 `memory/`、`skills/`、`traces/` |
-| `$XIAOMAN_HOME/config.properties` | 模型 Base URL 和名称，不保存 API Key |
-| `XIAOMAN_CHAT_API_KEY` | 聊天模型 Key；未设置时回退到 `ARK_API_KEY` |
-| `XIAOMAN_OPERATOR_API_KEY` | 操作模型 Key；未设置时回退到 `ARK_API_KEY` |
+| `PIKO_WDA_URL` | `http://127.0.0.1:8100`，WDA 连接地址 |
+| `PIKO_HOME` | `~/.piko-ios`，保存 `memory/`、`skills/`、`traces/` |
+| `$PIKO_HOME/config.properties` | 模型 Base URL 和名称，不保存 API Key |
+| `PIKO_CHAT_API_KEY` | 聊天模型 Key；未设置时回退到 `ARK_API_KEY` |
+| `PIKO_OPERATOR_API_KEY` | 操作模型 Key；未设置时回退到 `ARK_API_KEY` |
 
-`XIAOMAN_IOS_HOME` 只控制 WDA 脚本状态；`XIAOMAN_HOME` 控制 runner 数据。如需自定义根目录，可以将两者指向同一目录。
+`PIKO_IOS_HOME` 只控制 WDA 脚本状态；`PIKO_HOME` 控制 runner 数据。如需自定义根目录，可以将两者指向同一目录。
 
 创建模型配置与复制技能的示例：
 
 ```bash
-export XIAOMAN_HOME="${XIAOMAN_HOME:-$HOME/.xiaoman-ios}"
-mkdir -p "$XIAOMAN_HOME/skills"
-cat > "$XIAOMAN_HOME/config.properties" <<'EOF'
+export PIKO_HOME="${PIKO_HOME:-$HOME/.piko-ios}"
+mkdir -p "$PIKO_HOME/skills"
+cat > "$PIKO_HOME/config.properties" <<'EOF'
 chat.baseUrl=https://ark.cn-beijing.volces.com/api/v3
 chat.model=你的聊天模型或接入点ID
 operator.baseUrl=https://ark.cn-beijing.volces.com/api/v3
 operator.model=你的看图模型或接入点ID
 EOF
-cp -R skills/ios/open-settings-wifi "$XIAOMAN_HOME/skills/"
-cp -R skills/ios/taobao-pick-item "$XIAOMAN_HOME/skills/"
+cp -R skills/ios/open-settings-wifi "$PIKO_HOME/skills/"
+cp -R skills/ios/taobao-pick-item "$PIKO_HOME/skills/"
 ```
 
 API Key 只从环境变量读取，不写入配置文件、技能、记忆或截图。可以在终端隐藏输入，避免把实际 Key 留在命令历史里：
@@ -141,14 +141,14 @@ printf '\n'
 export ARK_API_KEY
 ```
 
-使用不同服务或不同 Key 时，分别设置 `XIAOMAN_CHAT_API_KEY` 与 `XIAOMAN_OPERATOR_API_KEY`。Base URL 与模型 ID 也需对应服务。
+使用不同服务或不同 Key 时，分别设置 `PIKO_CHAT_API_KEY` 与 `PIKO_OPERATOR_API_KEY`。Base URL 与模型 ID 也需对应服务。
 
 ### 6. 检查 runner 并跑一个只读任务
 
-先在仓库根目录构建 runner（需要 JDK 17，第一次构建要联网下载依赖；`-Pxiaoman.iosOnly=true` 跳过 Android 模块，Mac 上不用装 Android SDK），并把它加到 PATH：
+先在仓库根目录构建 runner（需要 JDK 17，第一次构建要联网下载依赖；`-Ppiko.iosOnly=true` 跳过 Android 模块，Mac 上不用装 Android SDK），并把它加到 PATH：
 
 ```bash
-./gradlew -Pxiaoman.iosOnly=true :ios-runner:installDist
+./gradlew -Ppiko.iosOnly=true :ios-runner:installDist
 export PATH="$PWD/ios-runner/build/install/ios-runner/bin:$PATH"
 ```
 
@@ -160,9 +160,9 @@ ios-runner check
 ios-runner task "打开设置里的无线局域网页面，读出当前连接的网络" --skill open-settings-wifi
 ```
 
-`check` 用于检查 WDA 连接、截图和节点数。技能可以像上一步那样复制到 `$XIAOMAN_HOME/skills/`，也可以不复制，直接加 `--skills skills/ios` 读取仓库里的技能目录。
+`check` 用于检查 WDA 连接、截图和节点数。技能可以像上一步那样复制到 `$PIKO_HOME/skills/`，也可以不复制，直接加 `--skills skills/ios` 读取仓库里的技能目录。
 
-需要确认的操作（付款、发送、删除等）会在终端提示 `[y=允许一次 / t=本任务内允许 / 其他=拒绝]`。用 `--non-interactive` 或没有终端时，这类操作一律自动拒绝，提问也不会等待回答。每次运行的截图和步骤记录在 `$XIAOMAN_HOME/traces/` 下，API Key 会被替换成 `***`。设置技能只读取无线局域网开关状态与当前网络，不切换开关、不连接其他网络。
+需要确认的操作（付款、发送、删除等）会在终端提示 `[y=允许一次 / t=本任务内允许 / 其他=拒绝]`。用 `--non-interactive` 或没有终端时，这类操作一律自动拒绝，提问也不会等待回答。每次运行的截图和步骤记录在 `$PIKO_HOME/traces/` 下，API Key 会被替换成 `***`。设置技能只读取无线局域网开关状态与当前网络，不切换开关、不连接其他网络。
 
 也可以保存调试观察或进入聊天：
 
@@ -229,7 +229,7 @@ WDA 通过 UI 测试执行操作，启动 runner 时屏幕被测试控制属于�
 
 ### USB 端口转发失败
 
-查看 `wda/forward.log`，确认 UDID 指向当前设备、手机已信任 Mac、WDA 已启动、本机端口没有被其他服务占用。`iproxy` 版本需要支持脚本使用的 `-u` 和 `-s` 参数。Python 路径或安装失败时检查 Python 3 与网络；pymobiledevice3 子命令会随版本变化，可用虚拟环境内的 `pymobiledevice3 usbmux forward --help` 核对。`stop` 后再重新 `forward`，端口变化时同时更新 `XIAOMAN_WDA_URL`。
+查看 `wda/forward.log`，确认 UDID 指向当前设备、手机已信任 Mac、WDA 已启动、本机端口没有被其他服务占用。`iproxy` 版本需要支持脚本使用的 `-u` 和 `-s` 参数。Python 路径或安装失败时检查 Python 3 与网络；pymobiledevice3 子命令会随版本变化，可用虚拟环境内的 `pymobiledevice3 usbmux forward --help` 核对。`stop` 后再重新 `forward`，端口变化时同时更新 `PIKO_WDA_URL`。
 
 ### iOS 版本太新，或 WDA 启动超时
 

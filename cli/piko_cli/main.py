@@ -1,4 +1,4 @@
-"""xiaoman：小满技能开发者 CLI（校验、推送、运行、日志、轨迹）。"""
+"""piko：小可技能开发者 CLI（校验、推送、运行、日志、轨迹）。"""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def new_run_id(now=None, rng=None) -> str:
 
 
 def _err(msg: str):
-    print("xiaoman: " + msg, file=sys.stderr)
+    print("piko: " + msg, file=sys.stderr)
 
 
 # --------------------------------------------------------------------------- commands
@@ -68,7 +68,7 @@ def cmd_push(args, ctx) -> int:
         remote, files = adb.push_skill(info.directory, info.name)
         print("pushed %s -> %s (%s)" % (info.directory, remote, ", ".join(files)))
     adb.broadcast(adbmod.ACTION_RELOAD)
-    print("skills reloaded; problems found by the app are logged under tag %s (xiaoman logs)" % adbmod.LOG_TAG)
+    print("skills reloaded; problems found by the app are logged under tag %s (piko logs)" % adbmod.LOG_TAG)
     return 0
 
 
@@ -85,7 +85,7 @@ def cmd_run(args, ctx) -> int:
     if not args.follow:
         adb.broadcast(adbmod.ACTION_RUN, extras)
         print("started run %s" % run_id)
-        print("follow with: xiaoman logs --run-id %s   trace: xiaoman traces show %s" % (run_id, run_id))
+        print("follow with: piko logs --run-id %s   trace: piko traces show %s" % (run_id, run_id))
         return 0
     # start logcat before the broadcast so no event is missed
     proc = adb.spawn(*adb.logcat_argv())
@@ -198,7 +198,7 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--serial", "-s", default=argparse.SUPPRESS,
                         help="设备序列号（默认由 adb 决定，或取 $ANDROID_SERIAL）")
 
-    parser = argparse.ArgumentParser(prog="xiaoman", description=__doc__)
+    parser = argparse.ArgumentParser(prog="piko", description=__doc__)
     parser.add_argument("--adb", default=None, help="adb 可执行文件（默认：$ADB 或 PATH 上的 adb）")
     parser.add_argument("--serial", "-s", default=None, help="设备序列号")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
@@ -223,7 +223,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("stop", parents=[common], help="停止正在运行的任务")
     p.set_defaults(func=cmd_stop)
 
-    p = sub.add_parser("logs", parents=[common], help="从 logcat 持续读取小满事件")
+    p = sub.add_parser("logs", parents=[common], help="从 logcat 持续读取小可事件")
     p.add_argument("--run-id", help="只显示该次运行的事件")
     p.set_defaults(func=cmd_logs)
 

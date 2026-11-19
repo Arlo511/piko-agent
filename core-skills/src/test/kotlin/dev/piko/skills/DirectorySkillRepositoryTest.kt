@@ -34,7 +34,7 @@ class DirectorySkillRepositoryTest {
     @Test
     fun loadsExamplesWithoutProblems() = runTest {
         val examples = File(
-            System.getProperty("xiaoman.skills.examples")
+            System.getProperty("piko.skills.examples")
                 ?: File(System.getProperty("user.dir")).parentFile.resolve("skills/examples").path,
         )
         assertTrue(examples.isDirectory, "missing $examples")

@@ -1,12 +1,12 @@
-# 小满（Xiaoman）
+# 小可（Piko）
 
 [English](README.en.md)
 
-小满是一个跑在 Android 手机上的开源私人助手。你在它的 App 里聊天，它会记住你告诉它的事，
+小可是一个跑在 Android 手机上的开源私人助手。你在它的 App 里聊天，它会记住你告诉它的事，
 也能替你操作手机上的其他 App，比如打车、点外卖、改系统设置。新场景以**技能**的形式添加：一个技能
 就是一个包含 `SKILL.md` 和可选 `flow.yaml` 的小文件夹，推到手机上即可生效，不需要重新打包 APK。
 
-- 需要 Android 11（API 30）及以上。小满通过无障碍服务读取屏幕并执行操作。
+- 需要 Android 11（API 30）及以上。小可通过无障碍服务读取屏幕并执行操作。
 - iOS 无法在手机上单独运行；可用 Mac + WebDriverAgent 的方式试用，见 [docs/ios.md](docs/ios.md)。
 - 可接入 MCP 服务（高德地图、腾讯地图、滴滴、12306 等），查询和下单类的事情可以不操作手机，见 [docs/mcp.md](docs/mcp.md)；安卓 App 在「服务」页一键勾选。
 - iPhone 不装 App 也能用：网页版添加到主屏幕后聊天、勾选 MCP 服务，见 [docs/web.md](docs/web.md)。
@@ -50,16 +50,16 @@ scripts/gradle.sh test :app:assembleDebug            # 之后可以离线构建
 
 ## 使用
 
-1. 安装 debug APK，打开小满。
+1. 安装 debug APK，打开小可。
 2. 在「设置」里分别填写聊天模型和操作模型的 Base URL、模型名称和 API Key。
-3. 按提示开启小满无障碍服务。
+3. 按提示开启小可无障碍服务。
 4. 回到「聊天」，试试：「帮我打车回家」「记住我家在……」「把 Wi-Fi 打开」。
 
 以火山方舟为例，Base URL 填 `https://ark.cn-beijing.volces.com/api/v3`（也是默认值），模型填方舟上的模型或接入点 ID。
 
 ## 课堂实践
 
-[学生动手手册](docs/classroom.md)：TRAE 训练营第二期“用 TRAE 搭建你的个人 Agent 助手”的配套手册。第一节装好小满并跑通淘宝任务，第二节蒸馏你自己，再用 TRAE 改外卖技能、车票技能和首页入口。
+[学生动手手册](docs/classroom.md)：TRAE 训练营第二期“用 TRAE 搭建你的个人 Agent 助手”的配套手册。第一节装好小可并跑通淘宝任务，第二节蒸馏你自己，再用 TRAE 改外卖技能、车票技能和首页入口。
 
 ## 技能与开发者 CLI
 
@@ -67,16 +67,16 @@ scripts/gradle.sh test :app:assembleDebug            # 之后可以离线构建
 - [cli/](cli/README.md)（Python 3，仅依赖标准库）可以校验技能、通过 adb 推送到手机、在 debug 包上直接跑任务并查看轨迹：
 
 ```bash
-python3 cli/xiaoman.py lint skills/examples/*
-python3 cli/xiaoman.py push skills/examples/taxi-home
-python3 cli/xiaoman.py run "打开设置里的 Wi-Fi 页面" --skill open-settings-wifi --follow
-python3 cli/xiaoman.py traces show <run_id>
+python3 cli/piko.py lint skills/examples/*
+python3 cli/piko.py push skills/examples/taxi-home
+python3 cli/piko.py run "打开设置里的 Wi-Fi 页面" --skill open-settings-wifi --follow
+python3 cli/piko.py traces show <run_id>
 ```
 
 ## 目录结构
 
 ```
-xiaoman/
+piko/
 ├── core-api/        # 接口与数据结构，其他模块只依赖它
 ├── core-llm/        # 兼容 OpenAI 的模型客户端
 ├── core-memory/     # 记忆：Basic Memory 格式的 Markdown 笔记 + 中文检索
@@ -101,7 +101,7 @@ xiaoman/
 ## 记忆
 
 记忆是 Basic Memory 格式的 Markdown 文件，存放在
-`/sdcard/Android/data/dev.xiaoman.app/files/memory/`，可以直接拷进 Obsidian 查看和编辑。
+`/sdcard/Android/data/dev.piko.app/files/memory/`，可以直接拷进 Obsidian 查看和编辑。
 「忘记」会直接删除对应文件。
 
 ## 许可证

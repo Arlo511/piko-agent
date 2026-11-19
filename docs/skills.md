@@ -1,6 +1,6 @@
 # 编写技能
 
-一个技能教会小满一个场景（打车、外卖、排今日计划、按记忆出题……）。技能是一个文件夹，包含 `SKILL.md`
+一个技能教会小可一个场景（打车、外卖、排今日计划、按记忆出题……）。技能是一个文件夹，包含 `SKILL.md`
 和可选的 `flow.yaml`，不需要重新打包 APK。示例见 `skills/examples/`。
 
 ```
@@ -11,9 +11,9 @@ taxi-home/
 
 ## 技能放在哪里
 
-手机上：`/sdcard/Android/data/dev.xiaoman.app/files/skills/<name>/`。App 也会把示例技能作为 assets
+手机上：`/sdcard/Android/data/dev.piko.app/files/skills/<name>/`。App 也会把示例技能作为 assets
 打包；手机目录里同 `name` 的技能会覆盖内置技能。App 启动时会重新加载技能，debug 包也可以通过
-`dev.xiaoman.debug.RELOAD_SKILLS` 广播触发重新加载。
+`dev.piko.debug.RELOAD_SKILLS` 广播触发重新加载。
 
 ## SKILL.md
 
@@ -26,7 +26,7 @@ channel: deeplink-then-gui
 confirm_before: [确认呼叫]
 memory: [places/家]
 deeplinks:
-  route: "amapuri://route/plan/?sourceApplication=xiaoman&dname={destination}&dev=0&t=0"
+  route: "amapuri://route/plan/?sourceApplication=piko&dname={destination}&dev=0&t=0"
 ---
 # 高德打车回家
 
@@ -47,9 +47,9 @@ deeplinks:
 手机技能的 frontmatter 之后是写给操作模型的 Markdown。尽量简短具体：在 App 里怎么走、要给用户读出什么、
 什么时候 `ask_user`（登录、验证码、商品售罄）、什么时候 `finish`。
 
-## 小满内置链接
+## 小可内置链接
 
-有些系统功能有稳定的入口，比一页页点更可靠。小满把下面的链接转成系统调用，技能里像普通深链一样声明和使用：
+有些系统功能有稳定的入口，比一页页点更可靠。小可把下面的链接转成系统调用，技能里像普通深链一样声明和使用：
 
 | 链接 | 作用 |
 |---|---|
@@ -81,7 +81,7 @@ memory: [偏好/工作]
 单个工作流正文最多注入 2000 个字符，所有工作流正文与引用笔记合计最多 8000 个字符。
 超过总量的工作流只列名称和描述，因此说明尽量简短，把关键步骤放在前面。
 
-网页版通过 --skills DIR 或 XIAOMAN_WEB_SKILLS 加载目录，只使用 chat 渠道。
+网页版通过 --skills DIR 或 PIKO_WEB_SKILLS 加载目录，只使用 chat 渠道。
 未配置时没有技能；--local 会先尝试工作目录，再尝试 jar 目录及其上一级的 skills/examples、skills，
 使用第一个存在的目录。修改技能后重启 web-server 重新加载。
 
@@ -134,7 +134,7 @@ steps:
 唯一的例外是 `name` 与文件夹名不一致：会报告问题，但技能仍以 `name` 加载。未知字段也算问题，
 这样 `confirm-before` 之类的拼写错误不会悄悄丢掉安全确认词。用户技能加载失败时，同名的内置技能保持生效。
 
-在电脑上可以先用 CLI 校验：`python3 cli/xiaoman.py lint <技能目录>`。
+在电脑上可以先用 CLI 校验：`python3 cli/piko.py lint <技能目录>`。
 
 ## 安全
 

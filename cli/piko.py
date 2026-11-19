@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Xiaoman developer CLI. Run `python3 xiaoman.py --help`."""
+"""Piko developer CLI. Run `python3 piko.py --help`."""
 
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from xiaoman_cli.main import main  # noqa: E402
+from piko_cli.main import main  # noqa: E402
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 一键把小满网页版装到一台 Linux 云服务器（Debian/Ubuntu 优先，其他发行版按提示手动装依赖）。
+# 一键把小可网页版装到一台 Linux 云服务器（Debian/Ubuntu 优先，其他发行版按提示手动装依赖）。
 # 在你自己的电脑上、仓库根目录运行；通过 ssh 登录服务器，需要服务器账号有 sudo 权限。
 #
 # 用法：
 #   deploy/install.sh <ssh 目标> (--domain 域名 | --sslip [公网IP]) [选项]
 #
 #   <ssh 目标>            例如 ubuntu@203.0.113.10，或 ~/.ssh/config 里的主机别名
-#   --domain NAME         自有域名（A 记录已指向服务器），例如 xiaoman.example.com
+#   --domain NAME         自有域名（A 记录已指向服务器），例如 piko.example.com
 #   --sslip [IP]          没有域名时用 <IP>.sslip.io；IP 省略时从 ssh 目标里取，取不到就问服务器
 #   --access-code CODE    课堂访问码；不填就随机生成并打印一次（再次安装时不填则保留原来的）
 #   --timezone ZONE       提醒用的时区，默认 Asia/Shanghai
@@ -17,13 +17,13 @@
 #   --skip-build          不构建，直接用 --dist 或默认构建目录里的产物
 #
 #   课堂令牌（可选，默认关闭；讲师用自己的方舟 Key 兜底，学员只拿令牌）：
-#   --class-models LIST   模型白名单，如 xiaoman-class=doubao-seed-1-6-250615（别名=真实模型ID，逗号分隔）
+#   --class-models LIST   模型白名单，如 piko-class=doubao-seed-1-6-250615（别名=真实模型ID，逗号分隔）
 #   --class-key-file F    从本机文件 F 读讲师的方舟 Key（不要把 Key 写在命令行里）
 #   --class-key-stdin     从标准输入读 Key（终端里会提示输入，不回显）
 #   --class-upstream-url U  上游地址，默认 https://ark.cn-beijing.volces.com/api/v3
 #   --class-web-model N   网页版课堂模式用的白名单名，默认白名单第一个
 #   --class-off           关闭课堂令牌（删除服务器上的 Key 文件和相关设置）
-#   不给这些参数时沿用服务器上原来的课堂令牌设置。Key 存在服务器 /etc/xiaoman-web/class-upstream.key（0640）。
+#   不给这些参数时沿用服务器上原来的课堂令牌设置。Key 存在服务器 /etc/piko-web/class-upstream.key（0640）。
 #
 #   自助领取（可选，需要课堂令牌已开启；学员打开 https://<网址>/claim，在论坛帖回复验证短语后领令牌）：
 #   --claim-topic ID      领取帖编号（帖子链接 /t/标题/465300 里的数字）
@@ -39,8 +39,8 @@
 #
 #   -h, --help            显示本帮助
 #
-# 再次运行即为“更新”：上传新版本到 /opt/xiaoman-web/releases/<时间>，切换 current 链接并重启，
-# 旧版本保留，可用 deploy/rollback.sh 回滚。访问码、时区保存在服务器 /etc/xiaoman-web/env。
+# 再次运行即为“更新”：上传新版本到 /opt/piko-web/releases/<时间>，切换 current 链接并重启，
+# 旧版本保留，可用 deploy/rollback.sh 回滚。访问码、时区保存在服务器 /etc/piko-web/env。
 set -euo pipefail
 
 usage() { sed -n '2,43p' "$0" | sed 's/^# \{0,1\}//'; }
@@ -130,19 +130,19 @@ remote() { ssh "${ssh_opts[@]}" "$target" "$@"; }
 # 1. 构建 installDist（与 scripts/gradle.sh 一样把构建目录放在仓库外时，也能找到产物）。
 if [[ -z "$dist" ]]; then
   if [[ "$skip_build" == false ]]; then
-    echo "==> 构建 web-server（-Pxiaoman.iosOnly=true，不需要 Android SDK）"
-    if [[ -n "${XIAOMAN_TOOLCHAIN:-}" || -n "${XIAOMAN_BUILD_DIR:-}" ]]; then
-      "$here/scripts/gradle.sh" -Pxiaoman.iosOnly=true :web-server:installDist
+    echo "==> 构建 web-server（-Ppiko.iosOnly=true，不需要 Android SDK）"
+    if [[ -n "${PIKO_TOOLCHAIN:-}" || -n "${PIKO_BUILD_DIR:-}" ]]; then
+      "$here/scripts/gradle.sh" -Ppiko.iosOnly=true :web-server:installDist
     else
-      "$here/gradlew" -p "$here" -Pxiaoman.iosOnly=true :web-server:installDist
+      "$here/gradlew" -p "$here" -Ppiko.iosOnly=true :web-server:installDist
     fi
   fi
-  for candidate in "${XIAOMAN_BUILD_DIR:-/nonexistent}/web-server/install/web-server" "$here/web-server/build/install/web-server"; do
+  for candidate in "${PIKO_BUILD_DIR:-/nonexistent}/web-server/install/web-server" "$here/web-server/build/install/web-server"; do
     [[ -x "$candidate/bin/web-server" ]] && { dist="$candidate"; break; }
   done
-  if [[ -z "$dist" && -n "${XIAOMAN_TOOLCHAIN:-}" ]]; then
+  if [[ -z "$dist" && -n "${PIKO_TOOLCHAIN:-}" ]]; then
     key="$(printf '%s' "$here" | { sha1sum 2>/dev/null || shasum -a 1; } | cut -c1-12)"
-    candidate="$(dirname "$XIAOMAN_TOOLCHAIN")/builds/$key/out/web-server/install/web-server"
+    candidate="$(dirname "$PIKO_TOOLCHAIN")/builds/$key/out/web-server/install/web-server"
     [[ -x "$candidate/bin/web-server" ]] && dist="$candidate"
   fi
 fi
@@ -172,7 +172,7 @@ umask 077
 release="$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$work/bundle"
 tar -C "$(dirname "$dist")" -czf "$work/bundle/web-server.tgz" "$(basename "$dist")"
-cp "$here/deploy/xiaoman-web.service" "$here/deploy/Caddyfile.template" "$work/bundle/"
+cp "$here/deploy/piko-web.service" "$here/deploy/Caddyfile.template" "$work/bundle/"
 # 聊天工作流（channel: chat 的技能）：随版本上传，网页版启动时从 current/skills/examples 加载。
 [[ -d "$here/skills/examples" ]] && tar -C "$here" -cf "$work/bundle/skills.tar" skills/examples
 {
@@ -184,7 +184,7 @@ cp "$here/deploy/xiaoman-web.service" "$here/deploy/Caddyfile.template" "$work/b
     "$claim_topic" "$claim_expires" "$claim_max" "$claim_total" "$claim_daily" "$claim_forum" "$claim_before" "$claim_trust" "$claim_off"
 } > "$work/bundle/settings"
 if [[ -n "$class_key" ]]; then printf '%s\n' "$class_key" > "$work/bundle/class.key"; fi
-cp "$here/deploy/xiaoman-tokens" "$work/bundle/"
+cp "$here/deploy/piko-tokens" "$work/bundle/"
 cat > "$work/bundle/remote.sh" <<'REMOTE'
 #!/usr/bin/env bash
 # Runs on the server as root, from the uploaded bundle directory.
@@ -235,35 +235,35 @@ if [[ "$WITH_NODE" == true ]]; then
 fi
 
 # 用户与目录
-id xiaoman >/dev/null 2>&1 || useradd --system --home-dir /var/lib/xiaoman-web --shell /usr/sbin/nologin xiaoman
-install -d -o xiaoman -g xiaoman -m 0750 /var/lib/xiaoman-web
-install -d -m 0755 /opt/xiaoman-web/releases
-install -d -m 0750 -g xiaoman /etc/xiaoman-web
+id piko >/dev/null 2>&1 || useradd --system --home-dir /var/lib/piko-web --shell /usr/sbin/nologin piko
+install -d -o piko -g piko -m 0750 /var/lib/piko-web
+install -d -m 0755 /opt/piko-web/releases
+install -d -m 0750 -g piko /etc/piko-web
 
-dest="/opt/xiaoman-web/releases/$RELEASE"
+dest="/opt/piko-web/releases/$RELEASE"
 mkdir -p "$dest"
 tar -xzf web-server.tgz -C "$dest" --strip-components=1
 [[ -f skills.tar ]] && tar -xf skills.tar -C "$dest"
 chmod -R a+rX "$dest"
 
 # 访问码：新给的优先；否则沿用旧的；都没有就随机生成。
-env_file=/etc/xiaoman-web/env
+env_file=/etc/piko-web/env
 old_code=""
-[[ -f "$env_file" ]] && old_code="$(sed -n 's/^XIAOMAN_WEB_ACCESS_CODE=//p' "$env_file" | head -1)"
+[[ -f "$env_file" ]] && old_code="$(sed -n 's/^PIKO_WEB_ACCESS_CODE=//p' "$env_file" | head -1)"
 code="${NEW_ACCESS_CODE:-$old_code}"
 old_value() { [[ -f "$env_file" ]] && sed -n "s/^$1=//p" "$env_file" | head -1 || true; }
 
 # 课堂令牌：新给的设置优先，否则沿用旧的；Key 只放在 0640 的文件里。
-key_file=/etc/xiaoman-web/class-upstream.key
+key_file=/etc/piko-web/class-upstream.key
 if [[ "$CLASS_OFF" == true ]]; then
   rm -f "$key_file"; class_models="" class_url="" class_web_model=""
 else
-  if [[ -f class.key ]]; then install -o root -g xiaoman -m 0640 class.key "$key_file"; rm -f class.key; fi
-  class_models="${CLASS_MODELS:-$(old_value XIAOMAN_CLASS_MODELS)}"
-  class_url="${CLASS_URL:-$(old_value XIAOMAN_CLASS_UPSTREAM_URL)}"
-  class_web_model="${CLASS_WEB_MODEL:-$(old_value XIAOMAN_CLASS_WEB_MODEL)}"
+  if [[ -f class.key ]]; then install -o root -g piko -m 0640 class.key "$key_file"; rm -f class.key; fi
+  class_models="${CLASS_MODELS:-$(old_value PIKO_CLASS_MODELS)}"
+  class_url="${CLASS_URL:-$(old_value PIKO_CLASS_UPSTREAM_URL)}"
+  class_web_model="${CLASS_WEB_MODEL:-$(old_value PIKO_CLASS_WEB_MODEL)}"
 fi
-class_tuning="$( [[ -f "$env_file" && "$CLASS_OFF" != true ]] && grep -E '^XIAOMAN_CLASS_(TOKENS|TOKEN_RPM|TOKEN_CONCURRENCY|MAX_CONCURRENT|MAX_BODY_MB|TIMEOUT_SECONDS)=' "$env_file" || true)"
+class_tuning="$( [[ -f "$env_file" && "$CLASS_OFF" != true ]] && grep -E '^PIKO_CLASS_(TOKENS|TOKEN_RPM|TOKEN_CONCURRENCY|MAX_CONCURRENT|MAX_BODY_MB|TIMEOUT_SECONDS)=' "$env_file" || true)"
 class_state=off
 if [[ -n "$class_models" && -f "$key_file" ]]; then class_state=on
 elif [[ -n "$class_models" ]]; then say "已设置课堂模型白名单，但服务器上还没有方舟 Key（用 --class-key-file 或 --class-key-stdin 上传），课堂令牌保持关闭"
@@ -273,55 +273,55 @@ fi
 claim_lines=""
 if [[ "$CLAIM_OFF" != true ]]; then
   for name in TOPIC_ID EXPIRES MAX TOTAL_TOKENS DAILY_TOKENS FORUM MIN_CREATED_BEFORE MIN_TRUST; do
-    new="CLAIM_$name"; v="${!new:-$(old_value "XIAOMAN_CLAIM_$name")}"
+    new="CLAIM_$name"; v="${!new:-$(old_value "PIKO_CLAIM_$name")}"
     [[ "$name" == MIN_CREATED_BEFORE && "$v" == none ]] && v=""
-    [[ -n "$v" ]] && claim_lines+="XIAOMAN_CLAIM_$name=$v"$'\n'
+    [[ -n "$v" ]] && claim_lines+="PIKO_CLAIM_$name=$v"$'\n'
   done
 fi
 # 没有领取帖时服务不开启领取；份数、额度等先保留，等补上 --claim-topic 时生效。
-if [[ -n "$claim_lines" ]] && ! grep -q '^XIAOMAN_CLAIM_TOPIC_ID=' <<<"$claim_lines"; then say "自助领取缺领取帖（--claim-topic），保持关闭（已保留份数和额度设置）"; fi
-if grep -q '^XIAOMAN_CLAIM_TOPIC_ID=' <<<"$claim_lines" && ! grep -q '^XIAOMAN_CLAIM_EXPIRES=' <<<"$claim_lines"; then say "自助领取缺过期时间（--claim-expires），保持关闭"; claim_lines=""; fi
+if [[ -n "$claim_lines" ]] && ! grep -q '^PIKO_CLAIM_TOPIC_ID=' <<<"$claim_lines"; then say "自助领取缺领取帖（--claim-topic），保持关闭（已保留份数和额度设置）"; fi
+if grep -q '^PIKO_CLAIM_TOPIC_ID=' <<<"$claim_lines" && ! grep -q '^PIKO_CLAIM_EXPIRES=' <<<"$claim_lines"; then say "自助领取缺过期时间（--claim-expires），保持关闭"; claim_lines=""; fi
 if [[ -n "$claim_lines" && "$class_state" != on ]]; then say "自助领取需要先开启课堂令牌，设置已保留但暂不生效"; fi
 generated=false
 if [[ -z "$code" ]]; then code="$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 12)"; generated=true; fi
 umask 027
 cat > "$env_file.new" <<ENV
-# 小满网页版设置。改完后：sudo systemctl restart xiaoman-web
-XIAOMAN_WEB_ACCESS_CODE=$code
-XIAOMAN_PORT=$PORT
-XIAOMAN_TZ=$TZ_NAME
+# 小可网页版设置。改完后：sudo systemctl restart piko-web
+PIKO_WEB_ACCESS_CODE=$code
+PIKO_PORT=$PORT
+PIKO_TZ=$TZ_NAME
 TZ=$TZ_NAME
 # auto：PATH 里有 node 和 npx 时开启 12306；off：关闭
-XIAOMAN_STDIO_MCP=$stdio_mode
+PIKO_STDIO_MCP=$stdio_mode
 JAVA_OPTS=-Xmx384m -XX:+UseSerialGC
 ENV
 if [[ -d "$dest/skills/examples" ]]; then
-  { echo "# 聊天工作流：随版本发布的 skills/examples，只加载 channel: chat 的技能"; echo "XIAOMAN_WEB_SKILLS=/opt/xiaoman-web/current/skills/examples"; } >> "$env_file.new"
+  { echo "# 聊天工作流：随版本发布的 skills/examples，只加载 channel: chat 的技能"; echo "PIKO_WEB_SKILLS=/opt/piko-web/current/skills/examples"; } >> "$env_file.new"
 fi
 if [[ "$class_state" == on ]]; then
   {
-    echo "# 课堂令牌：讲师 Key 在 $key_file；令牌用 sudo xiaoman-tokens 管理"
-    echo "XIAOMAN_CLASS_UPSTREAM_KEY_FILE=$key_file"
-    echo "XIAOMAN_CLASS_MODELS=$class_models"
-    [[ -n "$class_url" ]] && echo "XIAOMAN_CLASS_UPSTREAM_URL=$class_url"
-    [[ -n "$class_web_model" ]] && echo "XIAOMAN_CLASS_WEB_MODEL=$class_web_model"
+    echo "# 课堂令牌：讲师 Key 在 $key_file；令牌用 sudo piko-tokens 管理"
+    echo "PIKO_CLASS_UPSTREAM_KEY_FILE=$key_file"
+    echo "PIKO_CLASS_MODELS=$class_models"
+    [[ -n "$class_url" ]] && echo "PIKO_CLASS_UPSTREAM_URL=$class_url"
+    [[ -n "$class_web_model" ]] && echo "PIKO_CLASS_WEB_MODEL=$class_web_model"
     [[ -n "$class_tuning" ]] && printf '%s\n' "$class_tuning"
     true
   } >> "$env_file.new"
 fi
 if [[ -n "$claim_lines" ]]; then
-  { echo "# 自助领取（/claim）：学员在论坛领取帖回复验证短语领令牌；sudo xiaoman-tokens claims 查看"; printf '%s' "$claim_lines"; } >> "$env_file.new"
+  { echo "# 自助领取（/claim）：学员在论坛领取帖回复验证短语领令牌；sudo piko-tokens claims 查看"; printf '%s' "$claim_lines"; } >> "$env_file.new"
 fi
-chgrp xiaoman "$env_file.new"; chmod 0640 "$env_file.new"; mv "$env_file.new" "$env_file"
+chgrp piko "$env_file.new"; chmod 0640 "$env_file.new"; mv "$env_file.new" "$env_file"
 
-install -m 0644 xiaoman-web.service /etc/systemd/system/xiaoman-web.service
-install -m 0755 xiaoman-tokens /usr/local/bin/xiaoman-tokens
-previous="$(readlink -f /opt/xiaoman-web/current 2>/dev/null || true)"
-ln -sfn "$dest" /opt/xiaoman-web/current
-[[ -n "$previous" && "$previous" != "$dest" ]] && echo "$previous" > /opt/xiaoman-web/previous
+install -m 0644 piko-web.service /etc/systemd/system/piko-web.service
+install -m 0755 piko-tokens /usr/local/bin/piko-tokens
+previous="$(readlink -f /opt/piko-web/current 2>/dev/null || true)"
+ln -sfn "$dest" /opt/piko-web/current
+[[ -n "$previous" && "$previous" != "$dest" ]] && echo "$previous" > /opt/piko-web/previous
 systemctl daemon-reload
-systemctl enable xiaoman-web >/dev/null 2>&1
-systemctl restart xiaoman-web
+systemctl enable piko-web >/dev/null 2>&1
+systemctl restart piko-web
 
 # Caddy：备份旧配置后写入。
 [[ -f /etc/caddy/Caddyfile ]] && cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$RELEASE"
@@ -333,9 +333,9 @@ systemctl reload caddy 2>/dev/null || systemctl restart caddy
 # 预热 npx 缓存，避免第一次查火车票时超时。
 if [[ "$stdio_mode" == auto ]]; then
   say "预热 12306-mcp（下载 npm 包）"
-  # 在服务用户可读的目录里跑；ssh 会话的 /root 对 xiaoman 不可访问，npx 会报 EACCES。
-  (cd /var/lib/xiaoman-web && sudo -u xiaoman HOME=/var/lib/xiaoman-web timeout 120 npx -y 12306-mcp </dev/null >/dev/null 2>&1) || true
-  if find /var/lib/xiaoman-web/.npm/_npx -maxdepth 3 -name 12306-mcp -type d 2>/dev/null | grep -q .; then say "12306-mcp 已缓存"; else say "预热未完成，第一次使用时会再下载"; fi
+  # 在服务用户可读的目录里跑；ssh 会话的 /root 对 piko 不可访问，npx 会报 EACCES。
+  (cd /var/lib/piko-web && sudo -u piko HOME=/var/lib/piko-web timeout 120 npx -y 12306-mcp </dev/null >/dev/null 2>&1) || true
+  if find /var/lib/piko-web/.npm/_npx -maxdepth 3 -name 12306-mcp -type d 2>/dev/null | grep -q .; then say "12306-mcp 已缓存"; else say "预热未完成，第一次使用时会再下载"; fi
 fi
 
 # 防火墙提示：只开 80/443。
@@ -351,15 +351,15 @@ for _ in $(seq 1 30); do
   if curl -fsS --max-time 3 "http://127.0.0.1:$PORT/api/info" >/dev/null; then break; fi
   sleep 1
 done
-curl -fsS --max-time 3 "http://127.0.0.1:$PORT/api/info" >/dev/null || { journalctl -u xiaoman-web -n 30 --no-pager; exit 3; }
+curl -fsS --max-time 3 "http://127.0.0.1:$PORT/api/info" >/dev/null || { journalctl -u piko-web -n 30 --no-pager; exit 3; }
 say "web-server 已在 127.0.0.1:$PORT 运行（版本目录 $dest）"
-journalctl -u xiaoman-web -n 6 --no-pager -o cat | grep -F -e '12306' -e '课堂令牌' -e '自助领取' || true
+journalctl -u piko-web -n 6 --no-pager -o cat | grep -F -e '12306' -e '课堂令牌' -e '自助领取' || true
 if [[ "$generated" == true ]]; then echo "ACCESS_CODE_GENERATED=$code"; fi
 REMOTE
 chmod +x "$work/bundle/remote.sh"
 
 echo "==> 上传到 $target"
-remote_dir="$(remote 'mktemp -d /tmp/xiaoman-web.XXXXXX')"
+remote_dir="$(remote 'mktemp -d /tmp/piko-web.XXXXXX')"
 scp -q "${ssh_opts[@]}" -r "$work/bundle/." "$target:$remote_dir/"
 echo "==> 在服务器上安装（需要 sudo）"
 # -tt：sudo 可能要输入密码。输出同时写入本地临时文件，用来取出随机生成的访问码。
@@ -390,5 +390,5 @@ if [[ -n "$generated_code" ]]; then
 elif [[ -n "$access_code" ]]; then
   echo "访问码已设置为你指定的值。"
 else
-  echo "访问码沿用服务器上原来的设置（sudo cat /etc/xiaoman-web/env 查看）。"
+  echo "访问码沿用服务器上原来的设置（sudo cat /etc/piko-web/env 查看）。"
 fi
