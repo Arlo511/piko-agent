@@ -37,7 +37,7 @@ private fun PixelSkinPreview() = SkinGallery(SkinId.PIXEL)
 
 @Composable
 private fun SkinGallery(id: SkinId) {
-    XiaomanTheme(id) {
+    PikoTheme(id) {
         Box(Modifier.fillMaxSize()) {
             SkinBackground(Modifier.matchParentSize())
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

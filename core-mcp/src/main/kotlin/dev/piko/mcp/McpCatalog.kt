@@ -108,7 +108,7 @@ class McpCatalog(val servers: List<CatalogServer>) {
     }
 
     companion object {
-        private const val RESOURCE = "/dev/xiaoman/mcp/catalog.json"
+        private const val RESOURCE = "/dev/piko/mcp/catalog.json"
 
         /** The catalog bundled with this module. */
         val builtIn: McpCatalog by lazy {

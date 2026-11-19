@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 /**
  * A small pill at the top of the screen showing the current step and a Stop button.
  *
- * [context] must be the connected [XiaomanAccessibilityService] (or a context derived from it):
+ * [context] must be the connected [PikoAccessibilityService] (or a context derived from it):
  * the window is TYPE_ACCESSIBILITY_OVERLAY, which only an accessibility service may add and which
  * needs no SYSTEM_ALERT_WINDOW permission. The window wraps its content and is not focusable, so
  * touches outside the pill reach the app underneath.
@@ -121,8 +121,8 @@ class StatusOverlay(private val context: Context) {
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
         val stop = Button(context).apply {
-            setText(R.string.xiaoman_overlay_stop)
-            contentDescription = context.getString(R.string.xiaoman_overlay_stop_description)
+            setText(R.string.piko_overlay_stop)
+            contentDescription = context.getString(R.string.piko_overlay_stop_description)
             minimumHeight = dp(48)
             minHeight = dp(48)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
@@ -163,6 +163,6 @@ class StatusOverlay(private val context: Context) {
     }
 
     private companion object {
-        const val TAG = "Xiaoman"
+        const val TAG = "Piko"
     }
 }

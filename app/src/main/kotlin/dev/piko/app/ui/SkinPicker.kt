@@ -113,7 +113,7 @@ private fun SkinSwatch(id: SkinId, selected: Boolean, onClick: () -> Unit) {
 
 @StringRes
 private fun SkinId.label(): Int = when (this) {
-    SkinId.XIAOMAN -> R.string.skin_xiaoman
+    SkinId.XIAOMAN -> R.string.skin_piko
     SkinId.GITHUB -> R.string.skin_github
     SkinId.IOS -> R.string.skin_ios
     SkinId.DEPTH -> R.string.skin_depth

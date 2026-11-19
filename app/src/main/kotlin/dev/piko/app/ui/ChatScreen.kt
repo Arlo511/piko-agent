@@ -35,7 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.piko.app.AppGraph
 import dev.piko.app.R
 import dev.piko.app.session.AgentSession
-import dev.piko.hands.XiaomanAccessibilityService
+import dev.piko.hands.PikoAccessibilityService
 
 @Composable
 fun ChatScreen(graph: AppGraph, onOpenSettings: () -> Unit) {
@@ -46,7 +46,7 @@ fun ChatScreen(graph: AppGraph, onOpenSettings: () -> Unit) {
     val question by session.question.collectAsStateWithLifecycle()
     val approval by session.approval.collectAsStateWithLifecycle()
     val settings by graph.settings.settings.collectAsStateWithLifecycle()
-    val service by XiaomanAccessibilityService.instance.collectAsStateWithLifecycle()
+    val service by PikoAccessibilityService.instance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current

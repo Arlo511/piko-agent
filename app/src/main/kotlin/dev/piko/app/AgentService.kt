@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
  * action and stops itself when the session goes idle.
  */
 class AgentService : LifecycleService() {
-    private val graph get() = (application as XiaomanApp).graph
+    private val graph get() = (application as PikoApp).graph
     private var watching = false
     private var lastStartId = 0
 
@@ -62,7 +62,7 @@ class AgentService : LifecycleService() {
     }
 
     companion object {
-        private const val TAG = "Xiaoman"
+        private const val TAG = "Piko"
 
         /**
          * Starts the service. May be refused when the app is in the background (Android 12+); the

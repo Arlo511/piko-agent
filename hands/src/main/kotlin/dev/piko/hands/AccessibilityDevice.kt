@@ -37,16 +37,16 @@ import kotlin.coroutines.resume
 class ServiceNotConnectedException : IllegalStateException(AccessibilityDevice.NOT_CONNECTED)
 
 /**
- * [Device] backed by [XiaomanAccessibilityService].
+ * [Device] backed by [PikoAccessibilityService].
  *
- * @param serviceProvider returns the connected service or null; usually `{ XiaomanAccessibilityService.instance.value }`.
+ * @param serviceProvider returns the connected service or null; usually `{ PikoAccessibilityService.instance.value }`.
  * @param context any context (the application context is fine); used for package queries and as fallback for starting activities.
  * @param maxNodes cap of the compact node list.
  * @param settleDelayMs pause after every action so the UI can react before the next observation.
  * @param overlay when set, it is hidden during screenshots and dispatched touch gestures.
  */
 class AccessibilityDevice(
-    private val serviceProvider: () -> XiaomanAccessibilityService?,
+    private val serviceProvider: () -> PikoAccessibilityService?,
     context: Context,
     private val maxNodes: Int = NodeCompactor.DEFAULT_MAX_NODES,
     private val settleDelayMs: Long = 600,
@@ -70,7 +70,7 @@ class AccessibilityDevice(
         overlay?.hiddenWhile { observeUnobstructed(service) } ?: observeUnobstructed(service)
     }
 
-    private suspend fun observeUnobstructed(service: XiaomanAccessibilityService): ScreenState {
+    private suspend fun observeUnobstructed(service: PikoAccessibilityService): ScreenState {
         val (w, h) = displaySize(service)
         val shot = captureScreenshot(service)
         val (pkg, nodes) = withContext(Dispatchers.Default) { readNodes(service, w, h) }
@@ -95,7 +95,7 @@ class AccessibilityDevice(
 
     private class Shot(val png: ByteArray?, val secure: Boolean, val reason: SecureReason? = null)
 
-    private suspend fun captureScreenshot(service: XiaomanAccessibilityService): Shot {
+    private suspend fun captureScreenshot(service: PikoAccessibilityService): Shot {
         val confirmation = SecureConfirmation(required = SECURE_CONFIRM_ATTEMPTS)
         repeat(SCREENSHOT_ATTEMPTS) {
             // Android allows one takeScreenshot per second per service. The extra secure retry
@@ -139,7 +139,7 @@ class AccessibilityDevice(
         class Failed(val code: Int) : RawShot()
     }
 
-    private suspend fun takeScreenshot(service: XiaomanAccessibilityService): RawShot =
+    private suspend fun takeScreenshot(service: PikoAccessibilityService): RawShot =
         suspendCancellableCoroutine { cont ->
             val direct = Executor { it.run() }
             try {
@@ -193,7 +193,7 @@ class AccessibilityDevice(
     }
 
     /** Reads the compact node list and the active package; replaces [latestNodes]. Caller holds [mutex]. */
-    private fun readNodes(service: XiaomanAccessibilityService, w: Int, h: Int): Pair<String?, List<dev.piko.api.UiNode>> {
+    private fun readNodes(service: PikoAccessibilityService, w: Int, h: Int): Pair<String?, List<dev.piko.api.UiNode>> {
         val roots = collectRoots(service)
         val pkg = roots.firstOrNull()?.packageName?.toString()
         val kept = compactor.compact(roots, AccessibilityNodeTree, w, h)
@@ -206,7 +206,7 @@ class AccessibilityDevice(
     }
 
     /** Active window first, then other application windows (dialogs, popups) top-down. Skips the IME and overlays. */
-    private fun collectRoots(service: XiaomanAccessibilityService): List<AccessibilityNodeInfo> {
+    private fun collectRoots(service: PikoAccessibilityService): List<AccessibilityNodeInfo> {
         val roots = ArrayList<AccessibilityNodeInfo>()
         val windows = runCatching { service.windows }.getOrDefault(emptyList())
         val activeRoot = service.rootInActiveWindow
@@ -254,7 +254,7 @@ class AccessibilityDevice(
         return result
     }
 
-    private suspend fun execute(service: XiaomanAccessibilityService, action: Action): ActionResult = when (action) {
+    private suspend fun execute(service: PikoAccessibilityService, action: Action): ActionResult = when (action) {
         is Action.Tap -> press(service, action.nodeId, action.point, long = false, durationMs = TAP_MS)
         is Action.LongPress -> press(service, action.nodeId, action.point, long = true, durationMs = action.durationMs.coerceIn(400, 5000))
         is Action.Swipe -> {
@@ -276,7 +276,7 @@ class AccessibilityDevice(
         is Action.AskUser, is Action.Finish -> ActionResult(false, "not a device action")
     }
 
-    private suspend fun press(service: XiaomanAccessibilityService, nodeId: Int?, point: Point?, long: Boolean, durationMs: Long): ActionResult {
+    private suspend fun press(service: PikoAccessibilityService, nodeId: Int?, point: Point?, long: Boolean, durationMs: Long): ActionResult {
         val entry = nodeId?.let { latestNodes.getOrNull(it) }
         if (nodeId != null && entry == null && point == null) return ActionResult(false, "unknown nodeId $nodeId")
         if (entry != null) {
@@ -297,12 +297,12 @@ class AccessibilityDevice(
         return pressAt(service, x, y, durationMs, "(${p.x},${p.y})")
     }
 
-    private suspend fun pressAt(service: XiaomanAccessibilityService, x: Float, y: Float, durationMs: Long, what: String): ActionResult {
+    private suspend fun pressAt(service: PikoAccessibilityService, x: Float, y: Float, durationMs: Long, what: String): ActionResult {
         val path = Path().apply { moveTo(x, y) }
         return gestureResult(service, path, durationMs, "press $what")
     }
 
-    private suspend fun gestureResult(service: XiaomanAccessibilityService, path: Path, durationMs: Long, what: String): ActionResult {
+    private suspend fun gestureResult(service: PikoAccessibilityService, path: Path, durationMs: Long, what: String): ActionResult {
         val gesture = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, durationMs))
             .build()
@@ -328,7 +328,7 @@ class AccessibilityDevice(
             }
         }
 
-    private suspend fun typeText(service: XiaomanAccessibilityService, action: Action.TypeText): ActionResult {
+    private suspend fun typeText(service: PikoAccessibilityService, action: Action.TypeText): ActionResult {
         var target: AccessibilityNodeInfo? = null
         val nodeId = action.nodeId
         if (nodeId != null) {
@@ -363,14 +363,14 @@ class AccessibilityDevice(
     private fun global(service: AccessibilityService, id: Int, what: String): ActionResult =
         if (service.performGlobalAction(id)) ActionResult(true, what) else ActionResult(false, "$what refused")
 
-    private fun launch(service: XiaomanAccessibilityService, packageName: String): ActionResult {
+    private fun launch(service: PikoAccessibilityService, packageName: String): ActionResult {
         val intent = appContext.packageManager.getLaunchIntentForPackage(packageName)
             ?: return ActionResult(false, "未找到应用 $packageName")
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return start(service, intent, "launched $packageName")
     }
 
-    private fun deeplink(service: XiaomanAccessibilityService, action: Action.OpenDeeplink): ActionResult {
+    private fun deeplink(service: PikoAccessibilityService, action: Action.OpenDeeplink): ActionResult {
         val uri = runCatching { Uri.parse(action.uri) }.getOrNull()
         if (uri?.scheme.isNullOrEmpty()) return ActionResult(false, "invalid uri ${action.uri}")
         val intent = try {
@@ -410,7 +410,7 @@ class AccessibilityDevice(
 
     companion object {
         const val NOT_CONNECTED = "无障碍服务未开启"
-        private const val TAG = "Xiaoman"
+        private const val TAG = "Piko"
         private const val SCREENSHOT_INTERVAL_MS = 1050L
         private const val SCREENSHOT_ATTEMPTS = 3
         private const val SECURE_CONFIRM_ATTEMPTS = 2

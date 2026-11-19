@@ -14,29 +14,29 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.piko.app.ui.LocalSkin
-import dev.piko.app.ui.XiaomanRoot
-import dev.piko.app.ui.XiaomanTheme
+import dev.piko.app.ui.PikoRoot
+import dev.piko.app.ui.PikoTheme
 
 class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
-        (application as XiaomanApp).graph.uiVisible.value = true
+        (application as PikoApp).graph.uiVisible.value = true
     }
 
     override fun onStop() {
-        (application as XiaomanApp).graph.uiVisible.value = false
+        (application as PikoApp).graph.uiVisible.value = false
         super.onStop()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val graph = (application as XiaomanApp).graph
+        val graph = (application as PikoApp).graph
         setContent {
             val skin by graph.settings.skin.collectAsStateWithLifecycle()
-            XiaomanTheme(skin) {
+            PikoTheme(skin) {
                 SystemBarIcons()
-                XiaomanRoot(graph)
+                PikoRoot(graph)
             }
         }
     }

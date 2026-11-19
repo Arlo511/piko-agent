@@ -9,7 +9,7 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val text = intent.getStringExtra(EXTRA_TEXT)?.takeIf { it.isNotBlank() } ?: return
         val id = intent.getIntExtra(EXTRA_ID, 0)
-        (context.applicationContext as XiaomanApp).graph.notifier.showReminder(id, text)
+        (context.applicationContext as PikoApp).graph.notifier.showReminder(id, text)
     }
 
     companion object {

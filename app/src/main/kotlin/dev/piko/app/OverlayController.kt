@@ -3,7 +3,7 @@ package dev.piko.app
 import android.content.Intent
 import dev.piko.app.session.AgentSession
 import dev.piko.hands.AccessibilityDevice
-import dev.piko.hands.XiaomanAccessibilityService
+import dev.piko.hands.PikoAccessibilityService
 import dev.piko.hands.StatusOverlay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,11 +20,11 @@ import kotlinx.coroutines.launch
 class OverlayController(
     private val session: AgentSession,
     private val device: AccessibilityDevice,
-    private val services: StateFlow<XiaomanAccessibilityService?> = XiaomanAccessibilityService.instance,
+    private val services: StateFlow<PikoAccessibilityService?> = PikoAccessibilityService.instance,
     private val uiVisible: StateFlow<Boolean> = MutableStateFlow(false),
 ) {
     private var overlay: StatusOverlay? = null
-    private var owner: XiaomanAccessibilityService? = null
+    private var owner: PikoAccessibilityService? = null
 
     fun start(scope: CoroutineScope): Job = scope.launch(Dispatchers.Main.immediate) {
         combine(services, session.busy, session.status, uiVisible) { service, busy, status, visible -> Triple(service, busy && !visible, status) }

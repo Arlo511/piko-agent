@@ -1,6 +1,6 @@
 package dev.piko.ios.runner
 
-import dev.piko.agent.XiaomanAgent
+import dev.piko.agent.PikoAgent
 import dev.piko.api.AgentConfig
 import dev.piko.api.ModelRole
 import dev.piko.ios.IosPlatform
@@ -16,7 +16,7 @@ import java.io.PrintStream
 
 /** The assembled agent with the pieces the command line needs to reach. */
 class RunnerSession(
-    val agent: XiaomanAgent,
+    val agent: PikoAgent,
     val sentinel: PolicySentinel,
     val trace: TraceRecorder,
     val skillCount: Int,
@@ -52,7 +52,7 @@ suspend fun assemble(
         selfPackage = IosPlatform.runnerBundleId(config.wdaBundleId),
     )
     val mcp = loadMcp(config, env, channels, out)
-    val agent = XiaomanAgent(
+    val agent = PikoAgent(
         chat = llm.create(config.chat.toModelConfig(ModelRole.CHAT)),
         operator = llm.create(config.operator.toModelConfig(ModelRole.OPERATOR)),
         device = trace.device(WdaDevice(WdaClient(config.wdaUrl))),

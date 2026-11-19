@@ -6,10 +6,10 @@ import android.content.Intent
 import dev.piko.api.ApprovalAnswer
 import dev.piko.api.ApprovalScope
 
-/** Not exported: receives only the PendingIntents of Xiaoman's own notifications. */
+/** Not exported: receives only the PendingIntents of Piko's own notifications. */
 class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val session = (context.applicationContext as XiaomanApp).graph.session
+        val session = (context.applicationContext as PikoApp).graph.session
         val id = intent.getLongExtra(EXTRA_APPROVAL_ID, -1).takeIf { it >= 0 }
         when (intent.action) {
             ACTION_STOP -> session.stop()

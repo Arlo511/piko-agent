@@ -5,7 +5,7 @@ import dev.piko.api.Observation
 
 /**
  * The user-configured personality, stored as a Basic Memory note (`persona`) plus an optional
- * user profile note (`profile`). Both are read on every chat turn by [XiaomanAgent.systemPrompt].
+ * user profile note (`profile`). Both are read on every chat turn by [PikoAgent.systemPrompt].
  *
  * A persona note holds `[tone]` (one line) and `[detail]` observations; the profile note holds
  * `[identity]` next to the user's other observations.

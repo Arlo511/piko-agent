@@ -12,7 +12,7 @@ import dev.piko.app.settings.SkinId
  * the MaterialTheme roles and the extra tokens that Material3 cannot express.
  */
 @Composable
-fun XiaomanTheme(skinId: SkinId = SkinId.XIAOMAN, content: @Composable () -> Unit) {
+fun PikoTheme(skinId: SkinId = SkinId.XIAOMAN, content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val skin = remember(skinId, dark) { SkinCatalog.of(skinId, dark) }
     CompositionLocalProvider(LocalSkin provides skin) {

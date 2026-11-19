@@ -6,6 +6,6 @@
     android:canPerformGestures="true"
     android:canRetrieveWindowContent="true"
     android:canTakeScreenshot="true"
-    android:description="@string/xiaoman_accessibility_description"
+    android:description="@string/piko_accessibility_description"
     android:notificationTimeout="100"
-    android:summary="@string/xiaoman_accessibility_summary" />
+    android:summary="@string/piko_accessibility_summary" />

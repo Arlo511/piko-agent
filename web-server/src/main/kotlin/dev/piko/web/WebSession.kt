@@ -17,7 +17,7 @@ class WebSession(val id: String, var lastUsed: Long, private val skills: SkillRe
     val channels = WebChannels()
     var busy = false
     @Volatile var job: Job? = null
-    var agent: XiaomanAgent? = null
+    var agent: PikoAgent? = null
     private var provider: McpToolProvider? = null
     private var hash: String? = null
     private val secrets = linkedSetOf<String>()
@@ -50,7 +50,7 @@ class WebSession(val id: String, var lastUsed: Long, private val skills: SkillRe
         }
     }
     @Synchronized fun assemble(body: JsonObject, config: McpConfig, llm: LlmClientFactory,
-        transports: (McpServerConfig) -> McpTransport, timezone: ZoneId, clock: () -> Long): XiaomanAgent {
+        transports: (McpServerConfig) -> McpTransport, timezone: ZoneId, clock: () -> Long): PikoAgent {
         check(!closed)
         val fingerprint = MessageDigest.getInstance("SHA-256").digest(
             buildJsonObject { put("model", body.obj("model")); put("mcp", body.obj("mcp")) }.toString().toByteArray())
@@ -63,7 +63,7 @@ class WebSession(val id: String, var lastUsed: Long, private val skills: SkillRe
         val operator = llm.create(chat.config.copy(role = ModelRole.OPERATOR))
         val p = McpToolProvider(config, channels, transportFactory = transports, clock = clock)
         provider = p
-        return XiaomanAgent(chat, operator, NoPhone, memory, skills,
+        return PikoAgent(chat, operator, NoPhone, memory, skills,
             PolicySentinel(approvals = { ApprovalAnswer(false) }, audit = {}), channels,
             IcsReminders(channels, timezone, clock), AgentConfig(phoneTasks = false), Prompts.NO_PHONE_PERSONA,
             clock = clock, externalTools = p).also { agent = it; hash = fingerprint }

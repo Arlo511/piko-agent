@@ -39,7 +39,7 @@ class ChatTurnTest {
         h.chat.fallback = { dev.piko.api.ChatResponse("嗯") }
         repeat(15) { h.agent.handle("消息 $it", h.events, h.stop) }
         val last = h.chat.requests.last().messages
-        assertEquals(1 + XiaomanAgent.HISTORY_LIMIT + 1, last.size)
+        assertEquals(1 + PikoAgent.HISTORY_LIMIT + 1, last.size)
         assertEquals(ChatRole.USER, last[1].role)
     }
 
@@ -118,7 +118,7 @@ class ChatTurnTest {
         val h = Harness()
         h.chat.fallback = { dev.piko.api.ChatResponse("", listOf(ToolCall("x", AgentTools.LIST_SKILLS, "{}"))) }
         h.agent.handle("循环", h.events, h.stop)
-        assertEquals(XiaomanAgent.MAX_TOOL_ROUNDS + 1, h.chat.requests.size)
+        assertEquals(PikoAgent.MAX_TOOL_ROUNDS + 1, h.chat.requests.size)
         assertTrue(h.chat.requests.last().tools.isEmpty())
         assertEquals(Prompts.TOOL_ROUNDS_EXCEEDED, h.events.of<AgentEvent.Reply>().single().text)
     }

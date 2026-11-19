@@ -200,7 +200,7 @@ class Stop(var value: Boolean = false) : StopSignal {
     override val stopped get() = value
 }
 
-/** Wires a [XiaomanAgent] with fakes; tests tweak the parts they care about. */
+/** Wires a [PikoAgent] with fakes; tests tweak the parts they care about. */
 class Harness(
     val chat: ScriptedLlm = ScriptedLlm(ModelRole.CHAT),
     val operator: ScriptedLlm = ScriptedLlm(ModelRole.OPERATOR),
@@ -216,7 +216,7 @@ class Harness(
 ) {
     private var ids = 0
     private var draftIds = 0
-    val agent = XiaomanAgent(
+    val agent = PikoAgent(
         chat, operator, device, memory, skills, sentinel, users, reminders, config,
         clock = clock,
         idFactory = { "t${++ids}" },

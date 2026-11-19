@@ -2,7 +2,7 @@ package dev.piko.app
 
 import android.app.Application
 
-class XiaomanApp : Application() {
+class PikoApp : Application() {
     lateinit var graph: AppGraph
         private set
 

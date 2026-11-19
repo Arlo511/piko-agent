@@ -38,7 +38,7 @@ class Notifier(private val context: Context) {
     }
 
     fun status(text: String?): Notification = NotificationCompat.Builder(context, CHANNEL_STATUS)
-        .setSmallIcon(R.drawable.ic_stat_xiaoman)
+        .setSmallIcon(R.drawable.ic_stat_piko)
         .setContentTitle(context.getString(R.string.notification_running))
         .setContentText(text)
         .setOngoing(true)
@@ -59,7 +59,7 @@ class Notifier(private val context: Context) {
         if (pending == null) return manager.cancel(ID_APPROVAL)
         if (!allowed()) return
         val notification = NotificationCompat.Builder(context, CHANNEL_ATTENTION)
-            .setSmallIcon(R.drawable.ic_stat_xiaoman)
+            .setSmallIcon(R.drawable.ic_stat_piko)
             .setContentTitle(context.getString(R.string.approval_title))
             .setContentText(pending.request.prompt)
             .setStyle(NotificationCompat.BigTextStyle().bigText(pending.request.prompt))
@@ -78,7 +78,7 @@ class Notifier(private val context: Context) {
         if (pending == null) return manager.cancel(ID_QUESTION)
         if (!allowed()) return
         val notification = NotificationCompat.Builder(context, CHANNEL_ATTENTION)
-            .setSmallIcon(R.drawable.ic_stat_xiaoman)
+            .setSmallIcon(R.drawable.ic_stat_piko)
             .setContentTitle(context.getString(if (pending.takeover) R.string.chat_takeover_label else R.string.notification_question))
             .setContentText(pending.question)
             .setStyle(NotificationCompat.BigTextStyle().bigText(pending.question))
@@ -93,7 +93,7 @@ class Notifier(private val context: Context) {
     fun showReminder(id: Int, text: String) {
         if (!allowed()) return
         val notification = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
-            .setSmallIcon(R.drawable.ic_stat_xiaoman)
+            .setSmallIcon(R.drawable.ic_stat_piko)
             .setContentTitle(context.getString(R.string.reminder_title))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))

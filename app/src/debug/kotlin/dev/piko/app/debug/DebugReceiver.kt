@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import dev.piko.app.XiaomanApp
+import dev.piko.app.PikoApp
 import kotlinx.coroutines.launch
 
 /**
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  */
 class DebugReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val graph = (context.applicationContext as XiaomanApp).graph
+        val graph = (context.applicationContext as PikoApp).graph
         val command = DebugCommand.parse(intent.action, intent::getStringExtra, graph.runIds::generate)
         when (command) {
             null -> Log.w(TAG, "debug: unknown action ${intent.action}")
@@ -55,6 +55,6 @@ class DebugReceiver : BroadcastReceiver() {
     }
 
     private companion object {
-        const val TAG = "Xiaoman"
+        const val TAG = "Piko"
     }
 }

@@ -107,4 +107,4 @@ data class MotionStyle(
 
 enum class IconStyle { MATERIAL, PIXEL }
 
-val LocalSkin = staticCompositionLocalOf<Skin> { error("XiaomanTheme is missing") }
+val LocalSkin = staticCompositionLocalOf<Skin> { error("PikoTheme is missing") }

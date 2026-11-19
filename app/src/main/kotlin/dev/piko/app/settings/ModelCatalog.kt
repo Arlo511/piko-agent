@@ -49,7 +49,7 @@ data class ModelCatalog(
 
     companion object {
         const val ASSET = "models/ark_models.json"
-        private const val TAG = "Xiaoman"
+        private const val TAG = "Piko"
         private val json = Json { ignoreUnknownKeys = true }
 
         fun load(context: Context): ModelCatalog = try {

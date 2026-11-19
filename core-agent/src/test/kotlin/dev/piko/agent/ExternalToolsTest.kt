@@ -33,7 +33,7 @@ class ExternalToolsTest {
     }
 
     private fun harness(provider: ToolProvider?) = Harness().let { h ->
-        h to XiaomanAgent(h.chat, h.operator, h.device, h.memory, h.skills, h.sentinel, h.users, h.reminders, h.config,
+        h to PikoAgent(h.chat, h.operator, h.device, h.memory, h.skills, h.sentinel, h.users, h.reminders, h.config,
             clock = h.clock, idFactory = { "t1" }, externalTools = provider, skillWriter = h.skillWriter)
     }
 

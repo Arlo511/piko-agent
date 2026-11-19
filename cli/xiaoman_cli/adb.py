@@ -18,7 +18,7 @@ RECEIVER = APP_PACKAGE + "/dev.piko.app.debug.DebugReceiver"
 ACTION_RUN = "dev.xiaoman.debug.RUN"
 ACTION_STOP = "dev.xiaoman.debug.STOP"
 ACTION_RELOAD = "dev.xiaoman.debug.RELOAD_SKILLS"
-LOG_TAG = "Xiaoman"
+LOG_TAG = "Piko"
 
 
 class AdbError(Exception):

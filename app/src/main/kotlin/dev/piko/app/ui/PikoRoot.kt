@@ -38,7 +38,7 @@ enum class Tab(@StringRes val label: Int, val icon: ImageVector) {
 }
 
 @Composable
-fun XiaomanRoot(graph: AppGraph) {
+fun PikoRoot(graph: AppGraph) {
     var tab by rememberSaveable { mutableStateOf(Tab.CHAT) }
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     Box(Modifier.fillMaxSize()) {

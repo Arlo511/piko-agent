@@ -37,7 +37,7 @@ class AgentSessionTest {
         trace = trace,
     )
 
-    /** Answers like XiaomanAgent: asks once through the session, then finishes. */
+    /** Answers like PikoAgent: asks once through the session, then finishes. */
     private class AskingAgent(private val users: () -> AgentSession) : Agent {
         val gate = CompletableDeferred<Unit>()
 

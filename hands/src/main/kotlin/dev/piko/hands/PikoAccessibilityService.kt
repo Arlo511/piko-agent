@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 data class ForegroundApp(val packageName: String, val activityName: String?)
 
 /**
- * Xiaoman's hands and eyes. Enabled by the user in system Settings → Accessibility.
+ * Piko's hands and eyes. Enabled by the user in system Settings → Accessibility.
  * [AccessibilityDevice] does the actual work; this class only exposes the connected instance
  * and tracks the foreground activity.
  */
-class XiaomanAccessibilityService : AccessibilityService() {
+class PikoAccessibilityService : AccessibilityService() {
 
     private val _foreground = MutableStateFlow<ForegroundApp?>(null)
 
@@ -73,9 +73,9 @@ class XiaomanAccessibilityService : AccessibilityService() {
     }
 
     companion object {
-        private val _instance = MutableStateFlow<XiaomanAccessibilityService?>(null)
+        private val _instance = MutableStateFlow<PikoAccessibilityService?>(null)
 
         /** The connected service, or null while the user has not enabled it. */
-        val instance: StateFlow<XiaomanAccessibilityService?> = _instance.asStateFlow()
+        val instance: StateFlow<PikoAccessibilityService?> = _instance.asStateFlow()
     }
 }

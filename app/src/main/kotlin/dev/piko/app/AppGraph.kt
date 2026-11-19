@@ -2,7 +2,7 @@ package dev.piko.app
 
 import android.content.Context
 import android.util.Log
-import dev.piko.agent.XiaomanAgent
+import dev.piko.agent.PikoAgent
 import dev.piko.api.Agent
 import dev.piko.api.AgentEvent
 import dev.piko.api.ModelRole
@@ -14,7 +14,7 @@ import dev.piko.app.trace.RecordingDevice
 import dev.piko.app.trace.TraceWriter
 import dev.piko.hands.AccessibilityDevice
 import dev.piko.hands.MutableStopSignal
-import dev.piko.hands.XiaomanAccessibilityService
+import dev.piko.hands.PikoAccessibilityService
 import dev.piko.app.settings.McpSettingsStore
 import dev.piko.app.settings.ModelCatalog
 import dev.piko.llm.LlmClientFactory
@@ -46,7 +46,7 @@ import java.io.IOException
 
 /**
  * Manual dependency container. Everything is built lazily; [start] runs once from
- * [XiaomanApp.onCreate].
+ * [PikoApp.onCreate].
  *
  * Folders (`<external files>` = `/sdcard/Android/data/dev.piko.app/files`):
  * `memory/`, `skills/` (user skills, override bundled ones), `traces/`, optional `mcp.json` (MCP servers,
@@ -131,7 +131,7 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
         )
     }
 
-    val accessibilityDevice by lazy { AccessibilityDevice({ XiaomanAccessibilityService.instance.value }, app) }
+    val accessibilityDevice by lazy { AccessibilityDevice({ PikoAccessibilityService.instance.value }, app) }
 
     private val device by lazy { RecordingDevice(accessibilityDevice, traces::saveScreenshot) }
 
@@ -170,7 +170,7 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
         if (!current.configured) return null
         val key = current to mcpSettings.current
         cachedAgent?.let { (k, agent) -> if (k == key) return agent }
-        val agent = XiaomanAgent(
+        val agent = PikoAgent(
             chat = llm.create(current.chat.toModelConfig(ModelRole.CHAT)),
             operator = llm.create(current.operator.toModelConfig(ModelRole.OPERATOR)),
             device = device,
@@ -228,6 +228,6 @@ class AppGraph(context: Context, private val llm: LlmClientFactory = LlmClients.
     }
 
     companion object {
-        const val TAG = "Xiaoman"
+        const val TAG = "Piko"
     }
 }

@@ -35,7 +35,7 @@ class OverlayGestureTest {
 
     @Test fun nodeEnumerationAlsoHidesTheStopOverlay() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val controller = Robolectric.buildService(XiaomanAccessibilityService::class.java).create()
+        val controller = Robolectric.buildService(PikoAccessibilityService::class.java).create()
         val service = controller.get()
         val overlay = StatusOverlay(service)
         try {
@@ -62,7 +62,7 @@ class OverlayGestureTest {
 
     private fun checkGestures(cancel: Boolean) = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val controller = Robolectric.buildService(XiaomanAccessibilityService::class.java).create()
+        val controller = Robolectric.buildService(PikoAccessibilityService::class.java).create()
         val service = controller.get()
         val overlay = StatusOverlay(service)
         try {
